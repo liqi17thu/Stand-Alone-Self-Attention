@@ -20,9 +20,9 @@ class AttentionConv(nn.Module):
         self.rel_h = nn.Parameter(torch.randn(out_channels // 2, 1, 1, kernel_size, 1), requires_grad=True)
         self.rel_w = nn.Parameter(torch.randn(out_channels // 2, 1, 1, 1, kernel_size), requires_grad=True)
 
-        self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias)
-        self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias)
-        self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias)
+        self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=groups)
+        self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=groups)
+        self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=groups)
 
         self.reset_parameters()
 
@@ -45,9 +45,10 @@ class AttentionConv(nn.Module):
 
         q_out = q_out.view(batch, self.groups, self.out_channels // self.groups, height, width, 1)
 
-        out = q_out * k_out
+        out = (q_out * k_out).sum(dim=2, keepdim=True)
         out = F.softmax(out, dim=-1)
-        out = torch.einsum('bnchwk,bnchwk -> bnchw', out, v_out).view(batch, -1, height, width)
+        out = (out * v_out).sum(dim=-1)
+        out = out.view(batch, -1, height, width)
 
         return out
 

@@ -8,7 +8,7 @@ from attention import AttentionConv, AttentionStem
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, in_channels, out_channels, stride=1, groups=1, base_width=64):
+    def __init__(self, in_channels, out_channels, stride=1, groups=8, base_width=64):
         super(Bottleneck, self).__init__()
         self.stride = stride
         width = int(out_channels * (base_width / 64.)) * groups

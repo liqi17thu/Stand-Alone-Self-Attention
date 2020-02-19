@@ -1,15 +1,13 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 
 import os
-from tqdm import tqdm
 import shutil
 
-from config import get_args, get_logger
-from model import ResNet50, ResNet38, ResNet26
-from preprocess import load_data
+from config import get_args
+from models.attentionResnet import ResNet50, ResNet38, ResNet26
+from data.preprocess import load_data
 
 
 def adjust_learning_rate(optimizer, epoch, args):

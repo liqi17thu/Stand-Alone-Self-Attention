@@ -1,8 +1,7 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from attention import AttentionConv, AttentionStem
+from models.units.attentionUnit import AttentionConv, AttentionStem
 
 
 class Bottleneck(nn.Module):
@@ -19,7 +18,7 @@ class Bottleneck(nn.Module):
             nn.ReLU(),
         )
         self.conv2 = nn.Sequential(
-            AttentionConv(width, width, kernel_size=7, padding=3, groups=8),
+            AttentionConv(width, width, kernel_size=7, padding=3, groups=groups),
             nn.BatchNorm2d(width),
             nn.ReLU(),
         )

@@ -3,8 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
 
-import math
-
 
 class AttentionConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, groups=1, bias=False):
@@ -79,7 +77,8 @@ class AttentionStem(nn.Module):
 
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias)
         self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias)
-        self.value_conv = nn.ModuleList([nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias) for _ in range(m)])
+        self.value_conv = nn.ModuleList(
+            [nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias) for _ in range(m)])
 
         self.reset_parameters()
 
@@ -126,8 +125,3 @@ class AttentionStem(nn.Module):
         init.normal_(self.emb_a, 0, 1)
         init.normal_(self.emb_b, 0, 1)
         init.normal_(self.emb_mix, 0, 1)
-
-
-# temp = torch.randn((2, 3, 32, 32))
-# conv = AttentionConv(3, 16, kernel_size=3, padding=1)
-# print(conv(temp).size())

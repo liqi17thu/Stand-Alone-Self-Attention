@@ -31,6 +31,7 @@ def train(model, train_loader, optimizer, criterion, epoch, args, logger):
         output = model(data)
         loss = criterion(output, target)
         loss.backward()
+        nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
 
         y_pred = output.data.max(1)[1]

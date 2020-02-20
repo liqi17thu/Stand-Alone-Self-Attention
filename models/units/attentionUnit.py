@@ -32,9 +32,9 @@ class AttentionConv(nn.Module):
         k_out = self.key_conv(padded_x)
         v_out = self.value_conv(padded_x)
 
-        assert q_out == q_out
-        assert k_out == k_out
-        assert v_out == v_out
+        assert (q_out == q_out).any()
+        assert (k_out == k_out).any()
+        assert (v_out == v_out).any()
 
         k_out = k_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
         v_out = v_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
@@ -47,16 +47,16 @@ class AttentionConv(nn.Module):
 
         q_out = q_out.view(batch, self.groups, self.out_channels // self.groups, height, width, 1)
 
-        assert q_out == q_out
-        assert k_out == k_out
-        assert v_out == v_out
+        assert (q_out == q_out).any()
+        assert (k_out == k_out).any()
+        assert (v_out == v_out).any()
 
         out = (q_out * k_out).sum(dim=2, keepdim=True)
-        assert out == out
+        assert (out == out).any()
         out = F.softmax(out, dim=-1)
-        assert out == out
+        assert (out == out).any()
         out = (out * v_out).sum(dim=-1)
-        assert out == out
+        assert (out == out).any()
         out = out.view(batch, -1, height, width)
 
         return out

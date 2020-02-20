@@ -7,7 +7,7 @@ from models.units.attentionUnit import AttentionConv, AttentionStem
 class Bottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, in_channels, out_channels, stride=1, groups=8, base_width=16):
+    def __init__(self, in_channels, out_channels, stride=1, groups=1, base_width=64):
         super(Bottleneck, self).__init__()
         self.stride = stride
         width = int(out_channels * (base_width / 64.)) * groups
@@ -18,7 +18,7 @@ class Bottleneck(nn.Module):
             nn.ReLU(),
         )
         self.conv2 = nn.Sequential(
-            AttentionConv(width, width, kernel_size=7, padding=3, groups=groups),
+            AttentionConv(width, width, kernel_size=7, padding=3, groups=8),
             nn.BatchNorm2d(width),
             nn.ReLU(),
         )

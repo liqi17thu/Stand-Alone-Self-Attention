@@ -7,7 +7,7 @@ import os
 import time
 
 from config import get_args
-from models.attentionResnet import ResNet50, ResNet38, ResNet26
+from models.saResnet import SAResNet50, SAResNet38, SAResNet26
 from data.preprocess import load_data
 from lib.utils import  AvgrageMeter, accuracy, save_checkpoint
 
@@ -121,13 +121,13 @@ def main(args, logger):
     print('img_size: {}, num_classes: {}, stem: {}'.format(args.img_size, num_classes, args.stem))
     if args.model_name == 'ResNet26':
         print('Model Name: {0}'.format(args.model_name))
-        model = ResNet26(num_classes=num_classes, stem=args.stem)
+        model = SAResNet26(num_classes=num_classes, stem=args.stem)
     elif args.model_name == 'ResNet38':
         print('Model Name: {0}'.format(args.model_name))
-        model = ResNet38(num_classes=num_classes, stem=args.stem)
+        model = SAResNet38(num_classes=num_classes, stem=args.stem)
     elif args.model_name == 'ResNet50':
         print('Model Name: {0}'.format(args.model_name))
-        model = ResNet50(num_classes=num_classes, stem=args.stem)
+        model = SAResNet50(num_classes=num_classes, stem=args.stem)
 
     if args.pretrained_model:
         filename = 'best_model_' + str(args.dataset) + '_' + str(args.model_name) + '_' + str(args.stem) + '_ckpt.tar'

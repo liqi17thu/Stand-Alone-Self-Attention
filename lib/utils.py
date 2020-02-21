@@ -48,3 +48,12 @@ def save_checkpoint(state, is_best, filename):
     if is_best:
         print('best Model Saving ...')
         shutil.copyfile(file_path, best_file_path)
+
+def get_model_parameters(model):
+    total_parameters = 0
+    for layer in list(model.parameters()):
+        layer_parameter = 1
+        for l in list(layer.size()):
+            layer_parameter *= l
+        total_parameters += layer_parameter
+    return total_parameters

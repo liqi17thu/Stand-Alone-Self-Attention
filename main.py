@@ -4,13 +4,12 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 
 import os
-import shutil
 import time
 
 from config import get_args
 from models.attentionResnet import ResNet50, ResNet38, ResNet26
 from data.preprocess import load_data
-from lib.utils import  AvgrageMeter, accuracy
+from lib.utils import  AvgrageMeter, accuracy, save_checkpoint
 
 
 def adjust_learning_rate(optimizer, epoch, args):
@@ -189,16 +188,6 @@ def main(args, logger):
                 'optimizer': optimizer.state_dict(),
                 'parameters': parameters,
             }, is_best, filename)
-
-
-def save_checkpoint(state, is_best, filename):
-    file_path = os.path.join('./checkpoint', filename)
-    torch.save(state, file_path)
-    best_file_path = os.path.join('./checkpoint', 'best_' + filename)
-    if is_best:
-        print('best Model Saving ...')
-        shutil.copyfile(file_path, best_file_path)
-
 
 if __name__ == '__main__':
     args, logger = get_args()

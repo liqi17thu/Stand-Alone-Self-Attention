@@ -9,7 +9,8 @@ def get_logger(filename):
     logger = logging.getLogger('logger')
     logger.setLevel(logging.DEBUG)
 
-    formatter = logging.Formatter('[%(levelname)s | %(filename)s:%(lineno)s] %(asctime)s: %(message)s')
+    log_format = '%(asctime)s | %(message)s'
+    formatter = logging.Formatter(log_format, datefmt='%m/%d %I:%M:%S %p')
 
     if not os.path.isdir('log'):
         os.mkdir('log')

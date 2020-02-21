@@ -1,3 +1,8 @@
+import torch
+
+import os
+import shutil
+
 
 class AvgrageMeter(object):
 
@@ -35,3 +40,11 @@ def accuracy(output, target, topk=(1,)):
         res.append(correct_k.mul_(1.0 / batch_size))
 
     return res
+
+def save_checkpoint(state, is_best, filename):
+    file_path = os.path.join('./checkpoint', filename)
+    torch.save(state, file_path)
+    best_file_path = os.path.join('./checkpoint', 'best_' + filename)
+    if is_best:
+        print('best Model Saving ...')
+        shutil.copyfile(file_path, best_file_path)

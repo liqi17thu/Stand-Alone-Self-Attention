@@ -6,12 +6,13 @@ import os
 import argparse
 import shutil
 
-from lib.models.saResnet import *
 from lib.data.preprocess import load_data
-from lib.utils import save_checkpoint, get_model_parameters, get_logger
+from lib.models.saResnet import *
 from lib.core.train import train
 from lib.core.vaild import validate
 from lib.config import cfg
+from lib.utils import save_checkpoint, get_model_parameters, get_logger, CrossEntropyLabelSmooth
+
 
 parser = argparse.ArgumentParser('parameters')
 parser.add_argument('name', type=str)
@@ -56,17 +57,21 @@ def main(cfg):
         start_epoch = 1
         best_acc = 0.0
 
+    if cfg.TRAIN.CRIT.SMOOTH > 0:
+        criterion = CrossEntropyLabelSmooth(num_classes=num_classes, epsilon=cfg.TRAIN.CRIT.SMOOTH)
+    else:
+        criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(model.parameters(), lr=cfg.TRAIN.OPTIM.LR,
+                          momentum=cfg.TRAIN.OPTIM.MOMENTUM, weight_decay=cfg.TRAIN.OPTIM.WD)
+
     if cfg.CUDA:
         if torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)
         model = model.cuda()
+        criterion = criterion.cuda()
 
     print("Number of model parameters: ", get_model_parameters(model))
     logger.info("Number of model parameters: {0}".format(get_model_parameters(model)))
-
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=cfg.TRAIN.OPTIM.LR,
-                          momentum=cfg.TRAIN.OPTIM.MOMENTUM, weight_decay=cfg.TRAIN.OPTIM.WD)
 
     for epoch in range(start_epoch, cfg.TRAIN.EPOCH + 1):
         train(model, train_loader, optimizer, criterion, epoch, cfg, logger, writer)

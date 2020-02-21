@@ -17,8 +17,9 @@ parser.add_argument('job-name', type=str)
 parser.add_argument('--save-path', type=str, default='experiments')
 
 
-def main(cfg, logger):
-    writer = SummaryWriter()
+def main(cfg):
+    logger = get_logger(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'train.log'))
+    writer = SummaryWriter(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'runs'))
 
     train_loader, test_loader = load_data(cfg)
     if cfg.TRAIN.DATASET.NAME == 'CIFAR10':
@@ -109,6 +110,4 @@ if __name__ == '__main__':
     cfg.SAVE_PATH = os.path.join(cfg.SAVE_PATH, 'train')
     cfg.JOB_NAME = args.job_name
 
-    log = get_logger(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'train.log'))
-
-    main(cfg, log)
+    main(cfg)

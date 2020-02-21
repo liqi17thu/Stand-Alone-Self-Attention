@@ -37,6 +37,7 @@ def train(model, train_loader, optimizer, criterion, epoch, args, logger):
         output = model(data)
         loss = criterion(output, target)
         loss.backward()
+        nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
 
         prec1, prec5 = accuracy(output, target, topk=(1, 5))

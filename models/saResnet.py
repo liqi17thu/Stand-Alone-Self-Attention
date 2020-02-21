@@ -6,7 +6,7 @@ from models.units.resUnit import Bottleneck
 
 class SAResNet(nn.Module):
     def __init__(self, block, num_blocks, num_classes=1000, stem=False):
-        super(Model, self).__init__()
+        super(SAResNet, self).__init__()
         self.in_places = 64
 
         if stem:

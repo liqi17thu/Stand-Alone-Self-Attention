@@ -4,7 +4,7 @@ import time
 
 from lib.utils import AvgrageMeter, accuracy
 
-def eval(model, test_loader, criterion, epoch, cfg, logger, writer):
+def validate(model, test_loader, criterion, epoch, cfg, logger, writer):
     print('evaluation ...')
     model.eval()
 

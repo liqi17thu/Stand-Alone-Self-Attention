@@ -10,7 +10,7 @@ from lib.models.saResnet import *
 from lib.data.preprocess import load_data
 from lib.utils import save_checkpoint, get_model_parameters, get_logger
 from lib.core.train import train
-from lib.core.vaild import eval
+from lib.core.vaild import validate
 from lib.config import cfg
 
 parser = argparse.ArgumentParser('parameters')
@@ -56,7 +56,7 @@ def main(cfg):
         start_epoch = 1
         best_acc = 0.0
 
-    if cfg.TRAIN.CUDA:
+    if cfg.CUDA:
         if torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)
         model = model.cuda()
@@ -70,7 +70,7 @@ def main(cfg):
 
     for epoch in range(start_epoch, cfg.TRAIN.EPOCH + 1):
         train(model, train_loader, optimizer, criterion, epoch, cfg, logger, writer)
-        eval_acc = eval(model, test_loader, criterion, epoch, cfg, logger, writer)
+        eval_acc = validate(model, test_loader, criterion, epoch, cfg, logger, writer)
 
         is_best = eval_acc > best_acc
         best_acc = max(eval_acc, best_acc)

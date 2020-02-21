@@ -9,7 +9,7 @@ __C = CN()
 
 cfg = __C
 
-__C.SAVE_PATH = './experiments/'
+__C.SAVE_PATH = './experiments'
 
 __C.TRAIN = CN()
 

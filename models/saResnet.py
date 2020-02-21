@@ -69,20 +69,20 @@ class SAResNet(nn.Module):
         return out
 
 
-def SAResNet26(num_classes=1000, stem=False):
-    return SAResNet(SABottleneck, [1, 2, 4, 1], num_classes=num_classes, stem=stem)
+def SAResNet26(num_classes=1000, stem=False, num_sablock=2):
+    block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
+    return SAResNet(block, [1, 2, 4, 1], num_classes=num_classes, stem=stem)
 
 
-def SAResNet38(num_classes=1000, stem=False):
+def SAResNet38(num_classes=1000, stem=False, num_sablock=2):
+    block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
     return SAResNet(SABottleneck, [2, 3, 5, 2], num_classes=num_classes, stem=stem)
 
 
-def SAResNet50(num_classes=1000, stem=False):
+def SAResNet50(num_classes=1000, stem=False, num_sablock=2):
+    block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
     return SAResNet(SABottleneck, [3, 4, 6, 3], num_classes=num_classes, stem=stem)
 
-def R2A2_ResNet38(num_classes=1000, stem=False):
-    return SAResNet([Bottleneck, Bottleneck, SABottleneck, SABottleneck],
-                    [2, 3, 5, 2], num_classes=num_classes, stem=stem)
 
 # temp = torch.randn((2, 3, 224, 224))
 # model = ResNet38(num_classes=1000, stem=True)

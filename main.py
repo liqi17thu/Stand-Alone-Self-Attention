@@ -119,15 +119,15 @@ def main(args, logger):
         num_classes = 1000
 
     print('img_size: {}, num_classes: {}, stem: {}'.format(args.img_size, num_classes, args.stem))
-    if args.model_name == 'ResNet26':
+    if args.model_name == 'SAResNet26':
         print('Model Name: {0}'.format(args.model_name))
-        model = SAResNet26(num_classes=num_classes, stem=args.stem)
-    elif args.model_name == 'ResNet38':
+        model = SAResNet26(num_classes=num_classes, stem=args.stem, num_sablock=args.num_sablock)
+    elif args.model_name == 'SAResNet38':
         print('Model Name: {0}'.format(args.model_name))
-        model = SAResNet38(num_classes=num_classes, stem=args.stem)
-    elif args.model_name == 'ResNet50':
+        model = SAResNet38(num_classes=num_classes, stem=args.stem, num_sablock=args.num_sablock)
+    elif args.model_name == 'SAResNet50':
         print('Model Name: {0}'.format(args.model_name))
-        model = SAResNet50(num_classes=num_classes, stem=args.stem)
+        model = SAResNet50(num_classes=num_classes, stem=args.stem, num_sablock=args.num_sablock)
 
     if args.pretrained_model:
         filename = 'best_model_' + str(args.dataset) + '_' + str(args.model_name) + '_' + str(args.stem) + '_ckpt.tar'

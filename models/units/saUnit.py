@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
 
+from models.units.utils import get_same_padding
 
 class SAConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, groups=1, bias=False):
@@ -126,12 +127,15 @@ class SAStem(nn.Module):
         init.normal_(self.emb_b, 0, 1)
         init.normal_(self.emb_mix, 0, 1)
 
+
 class SABottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, in_channels, out_channels, stride=1, groups=1, base_width=64, heads=8):
+    def __init__(self, in_channels, out_channels, stride=1, kernel_size=7, groups=1, base_width=64, heads=8):
         super(SABottleneck, self).__init__()
         self.stride = stride
+        self.kernel_size = kernel_size
+
         width = int(out_channels * (base_width / 64.)) * groups
 
         self.conv1 = nn.Sequential(
@@ -139,11 +143,14 @@ class SABottleneck(nn.Module):
             nn.BatchNorm2d(width),
             nn.ReLU(),
         )
+
+        padding = get_same_padding(kernel_size)
         self.conv2 = nn.Sequential(
-            SAConv(width, width, kernel_size=7, padding=3, groups=heads),
+            SAConv(width, width, kernel_size=self.kernel_size, padding=padding, groups=heads),
             nn.BatchNorm2d(width),
             nn.ReLU(),
         )
+
         self.conv3 = nn.Sequential(
             nn.Conv2d(width, self.expansion * out_channels, kernel_size=1, bias=False),
             nn.BatchNorm2d(self.expansion * out_channels),

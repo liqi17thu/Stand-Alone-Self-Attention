@@ -21,6 +21,7 @@ class AvgrageMeter(object):
         self.cnt += n
         self.avg = self.sum / self.cnt
 
+
 def accuracy(output, target, topk=(1,)):
     """ Computes the precision@k for the specified values of k """
     maxk = max(topk)
@@ -41,6 +42,7 @@ def accuracy(output, target, topk=(1,)):
 
     return res
 
+
 def save_checkpoint(state, is_best, filename):
     file_path = os.path.join('./checkpoint', filename)
     torch.save(state, file_path)
@@ -48,6 +50,7 @@ def save_checkpoint(state, is_best, filename):
     if is_best:
         print('best Model Saving ...')
         shutil.copyfile(file_path, best_file_path)
+
 
 def get_model_parameters(model):
     total_parameters = 0
@@ -57,3 +60,30 @@ def get_model_parameters(model):
             layer_parameter *= l
         total_parameters += layer_parameter
     return total_parameters
+
+
+def adjust_learning_rate(optimizer, epoch, args):
+    """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
+    lr = args.lr * (0.1 ** (epoch // 30))
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
+
+
+def make_divisible(v, divisor, min_val=None):
+    """
+    This function is taken from the original tf repo.
+    It ensures that all layers have a channel number that is divisible by 8
+    It can be seen here:
+    https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
+    :param v:
+    :param divisor:
+    :param min_val:
+    :return:
+    """
+    if min_val is None:
+        min_val = divisor
+    new_v = max(min_val, int(v + divisor / 2) // divisor * divisor)
+    # Make sure that round down does not go down by more than 10%.
+    if new_v < 0.9 * v:
+        new_v += divisor
+    return new_v

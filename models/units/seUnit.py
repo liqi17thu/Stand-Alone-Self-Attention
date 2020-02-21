@@ -1,5 +1,6 @@
 import torch.nn as nn
 
+
 class SEModule(nn.Module):
 
     def __init__(self, channels, reduction):

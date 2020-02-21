@@ -43,6 +43,7 @@ def get_args():
     parser.add_argument('--print-interval', type=int, default=100)
     parser.add_argument('--display', type=int, default=20)
     parser.add_argument('--cuda', type=bool, default=True)
+    parser.add_argument('--se-attention', type=bool, default=False)
     parser.add_argument('--pretrained-model', type=bool, default=False)
     parser.add_argument('--stem', type=bool, default=False, help='attention stem: True, conv: False')
 

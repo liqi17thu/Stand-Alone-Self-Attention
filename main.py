@@ -9,14 +9,7 @@ import time
 from config import get_args
 from models.saResnet import SAResNet50, SAResNet38, SAResNet26
 from data.preprocess import load_data
-from lib.utils import  AvgrageMeter, accuracy, save_checkpoint
-
-
-def adjust_learning_rate(optimizer, epoch, args):
-    """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
-    lr = args.lr * (0.1 ** (epoch // 30))
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
+from lib.utils import  AvgrageMeter, accuracy, save_checkpoint, adjust_learning_rate, get_model_parameters
 
 
 def train(model, train_loader, optimizer, criterion, epoch, args, logger, writer):
@@ -95,16 +88,6 @@ def eval(model, test_loader, criterion, epoch, args, writer):
                 writer.add_scalar('Accuracy/vaild', top1.avg, epoch * len(test_loader) + i)
 
     return prec1.item()
-
-
-def get_model_parameters(model):
-    total_parameters = 0
-    for layer in list(model.parameters()):
-        layer_parameter = 1
-        for l in list(layer.size()):
-            layer_parameter *= l
-        total_parameters += layer_parameter
-    return total_parameters
 
 
 def main(args, logger):
@@ -188,6 +171,7 @@ def main(args, logger):
                 'optimizer': optimizer.state_dict(),
                 'parameters': parameters,
             }, is_best, filename)
+
 
 if __name__ == '__main__':
     args, logger = get_args()

@@ -43,7 +43,7 @@ class AttentionConv(nn.Module):
 
         q_out = q_out.view(batch, self.groups, self.out_channels // self.groups, height, width, 1)
 
-        out = (q_out * k_out).sum(dim=2, keepdim=True)
+        out = (q_out * k_out).sum(dim=2, keepdim=True) * self.groups / self.out_channels
         out = F.softmax(out, dim=-1)
         out = (out * v_out).sum(dim=-1)
         out = out.view(batch, -1, height, width)

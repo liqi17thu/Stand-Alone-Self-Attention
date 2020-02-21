@@ -92,7 +92,7 @@ def main(cfg):
                 'best_acc': best_acc,
                 'optimizer': optimizer.state_dict(),
                 'parameters': parameters,
-            }, is_best, filename)
+            }, is_best, save_path, filename)
         else:
             save_checkpoint({
                 'epoch': epoch,
@@ -101,7 +101,7 @@ def main(cfg):
                 'best_acc': best_acc,
                 'optimizer': optimizer.state_dict(),
                 'parameters': parameters,
-            }, is_best, filename)
+            }, is_best, save_path, filename)
 
 
 if __name__ == '__main__':

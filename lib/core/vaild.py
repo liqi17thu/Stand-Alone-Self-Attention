@@ -4,6 +4,7 @@ import time
 
 from lib.utils import AvgrageMeter, accuracy
 
+
 def validate(model, test_loader, criterion, epoch, cfg, logger, writer):
     print('evaluation ...')
     model.eval()
@@ -18,7 +19,7 @@ def validate(model, test_loader, criterion, epoch, cfg, logger, writer):
     with torch.no_grad():
         for i, (data, target) in enumerate(test_loader):
             N = data.size(0)
-            if cfg.TRAIN.CUDA:
+            if cfg.CUDA:
                 data, target = data.cuda(), target.cuda()
             output = model(data)
 

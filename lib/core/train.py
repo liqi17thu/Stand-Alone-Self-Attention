@@ -16,7 +16,7 @@ def train(model, train_loader, optimizer, criterion, epoch, cfg, logger, writer)
     sta_time = time.time()
     for i, (data, target) in enumerate(train_loader):
         adjust_learning_rate(optimizer, epoch, cfg.TRAIN.OPTIM.LR)
-        if cfg.TRAIN.CUDA:
+        if cfg.CUDA:
             data, target = data.cuda(), target.cuda()
 
         N = data.size(0)

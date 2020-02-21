@@ -4,10 +4,12 @@ import torch.optim as optim
 
 import os
 import shutil
+import time
 
 from config import get_args
 from models.attentionResnet import ResNet50, ResNet38, ResNet26
 from data.preprocess import load_data
+from lib.utils import  AvgrageMeter, accuracy
 
 
 def adjust_learning_rate(optimizer, epoch, args):
@@ -18,49 +20,61 @@ def adjust_learning_rate(optimizer, epoch, args):
 
 
 def train(model, train_loader, optimizer, criterion, epoch, args, logger):
+    top1 = AvgrageMeter()
+    top5 = AvgrageMeter()
+    losses = AvgrageMeter()
+
     model.train()
 
-    train_acc = 0.0
     step = 0
     for data, target in train_loader:
         adjust_learning_rate(optimizer, epoch, args)
         if args.cuda:
             data, target = data.cuda(), target.cuda()
 
+        N = data.size(0)
         optimizer.zero_grad()
         output = model(data)
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
 
-        y_pred = output.data.max(1)[1]
+        prec1, prec5 = accuracy(output, target, topk=(1, 5))
 
-        acc = float(y_pred.eq(target.data).sum()) / len(data) * 100.
-        train_acc += acc
+        losses.update(loss.item(), N)
+        top1.update(prec1.item(), N)
+        top5.update(prec5.item(), N)
+
         step += 1
         if step % args.print_interval == 0:
-            # print("[Epoch {0:4d}] Loss: {1:2.3f} Acc: {2:.3f}%".format(epoch, loss.data, acc), end='')
-            logger.info("[Epoch {0:4d}] Loss: {1:2.3f} Acc: {2:.3f}%".format(epoch, loss.data, acc))
+            logger.info("[Epoch {0:4d}] Loss {losses.avg:.3f} Prec@(1,5)" 
+                        "({top1.avg:.1%}, {top5.avg:.1%})".format(epoch, losses=losses, top1=top1, top5=top5))
             for param_group in optimizer.param_groups:
-                # print(",  Current learning rate is: {}".format(param_group['lr']))
                 logger.info("Current learning rate is: {}".format(param_group['lr']))
 
 
 def eval(model, test_loader, args):
     print('evaluation ...')
     model.eval()
-    correct = 0
+
+    top1 = AvgrageMeter()
+    top5 = AvgrageMeter()
+
     with torch.no_grad():
         for data, target in test_loader:
+            N = data.size(0)
+
             if args.cuda:
                 data, target = data.cuda(), target.cuda()
             output = model(data)
-            prediction = output.data.max(1)[1]
-            correct += prediction.eq(target.data).sum()
 
-    acc = 100. * float(correct) / len(test_loader.dataset)
-    print('Test acc: {0:.2f}'.format(acc))
-    return acc
+            top1.update(prec1.item(), N)
+            top5.update(prec5.item(), N)
+            prec1, prec5 = accuracy(output, target, topk=(1, 5))
+
+    logger.info("Prec @ (1, 5)"
+    "({top1.avg:.1%}, {top5.avg:.1%})".format(top1=top1, top5=top5))
+    return top1
 
 
 def get_model_parameters(model):

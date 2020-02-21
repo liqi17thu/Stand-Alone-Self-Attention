@@ -15,8 +15,8 @@ def validate(model, test_loader, criterion, epoch, cfg, logger, writer):
 
 
     step = 0
-    sta_time = time.time()
     with torch.no_grad():
+        sta_time = time.time()
         for i, (data, target) in enumerate(test_loader):
             N = data.size(0)
             if cfg.CUDA:

@@ -1,9 +1,8 @@
 import torch.nn as nn
 
-from lib.utils import make_divisible
-from models.units.activation import build_activation
-from models.units.utils import get_same_padding
-from models.units.seUnit import SEModule
+from lib.models.units import build_activation
+from lib.models.units import get_same_padding
+from lib.models.units import SEModule
 
 class IdentityLayer(nn.Module):
 

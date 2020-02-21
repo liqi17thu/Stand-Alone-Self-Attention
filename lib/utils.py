@@ -3,6 +3,9 @@ import torch
 import os
 import shutil
 
+import logging
+import logging.handlers
+
 
 class AvgrageMeter(object):
 
@@ -20,6 +23,13 @@ class AvgrageMeter(object):
         self.sum += val * n
         self.cnt += n
         self.avg = self.sum / self.cnt
+
+
+def adjust_learning_rate(optimizer, epoch, original_lr):
+    """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
+    lr = original_lr * (0.1 ** (epoch // 30))
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
 
 
 def accuracy(output, target, topk=(1,)):
@@ -62,13 +72,6 @@ def get_model_parameters(model):
     return total_parameters
 
 
-def adjust_learning_rate(optimizer, epoch, args):
-    """Sets the learning rate to the initial LR decayed by 10 every 30 epochs"""
-    lr = args.lr * (0.1 ** (epoch // 30))
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
-
-
 def make_divisible(v, divisor, min_val=None):
     """
     This function is taken from the original tf repo.
@@ -87,3 +90,21 @@ def make_divisible(v, divisor, min_val=None):
     if new_v < 0.9 * v:
         new_v += divisor
     return new_v
+
+
+# DEBUG < INFO < WARNING < ERROR < CRITICAL
+def get_logger(file_path):
+    """ Make python logger """
+    logger = logging.getLogger('supernet')
+    log_format = '%(asctime)s | %(message)s'
+    formatter = logging.Formatter(log_format, datefmt='%m/%d %I:%M:%S %p')
+    file_handler = logging.FileHandler(file_path)
+    file_handler.setFormatter(formatter)
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
+    logger.setLevel(logging.INFO)
+
+    return logger

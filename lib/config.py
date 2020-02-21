@@ -1,0 +1,43 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from yacs.config import CfgNode as CN
+
+__C = CN()
+
+cfg = __C
+
+__C.SAVE_PATH = './experiments/'
+
+__C.TRAIN = CN()
+
+__C.TRAIN.CUDA = True
+__C.TRAIN.DISTRIBUTED = True
+__C.TRAIN.GPUS = 8
+__C.TRAIN.EPOCH = 100
+
+__C.TRAIN.DISP = 100
+
+__C.TRAIN.MODEL = CN()
+__C.TRAIN.MODEL.NAME = 'SAResNet26'
+__C.TRAIN.MODEL.STEM = False
+__C.TRAIN.MODEL.PRE_TRAINED = False
+__C.TRAIN.MODEL.NUM_SABLOCK = 2
+
+__C.TRAIN.DATASET = CN()
+__C.TRAIN.DATASET.NAME = 'CIFAR10'
+__C.TRAIN.DATASET.SPLIT_RATIO = 0.5
+__C.TRAIN.DATASET.TRAIN_DIR = '/data/home/v-had/data_local/imagenet/train'
+__C.TRAIN.DATASET.TEST_DIR = '/data/home/v-had/data_local/imagenet/val'
+__C.TRAIN.DATASET.MEAN = [0.485, 0.456, 0.406]
+__C.TRAIN.DATASET.STD = [0.229, 0.224, 0.225]
+__C.TRAIN.DATASET.IMAGE_SIZE = 32
+__C.TRAIN.DATASET.BATCH_SIZE = 25
+__C.TRAIN.DATASET.WORKERS = 0
+
+__C.TRAIN.OPTIM.METHOD = 'sgd'
+__C.TRAIN.OPTIM.LR = 1e-1
+__C.TRAIN.OPTIM.MOMENTUM = 0.9
+__C.TRAIN.OPTIM.WD = 1e-4

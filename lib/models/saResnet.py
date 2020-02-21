@@ -1,8 +1,8 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.units.saUnit import SAStem, SABottleneck
-from models.units.resUnit import Bottleneck
+from lib.models.units import SAStem, SABottleneck
+from lib.models.units import Bottleneck
 
 class SAResNet(nn.Module):
     def __init__(self, block, num_blocks, num_classes=1000, stem=False):

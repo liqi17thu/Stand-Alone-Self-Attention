@@ -1,8 +1,8 @@
 import torch.nn as nn
 
-from lib.models.units import build_activation
-from lib.models.units import get_same_padding
-from lib.models.units import SEModule
+from lib.models.units.activation import build_activation
+from lib.models.units.utils import get_same_padding
+from lib.models.units.seUnit import SEModule
 
 class IdentityLayer(nn.Module):
 

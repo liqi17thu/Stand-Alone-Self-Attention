@@ -4,6 +4,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 import os
 import argparse
+import shutil
 
 from lib.models.saResnet import *
 from lib.data.preprocess import load_data
@@ -13,8 +14,8 @@ from lib.core.vaild import eval
 from lib.config import cfg
 
 parser = argparse.ArgumentParser('parameters')
-parser.add_argument('job-name', type=str)
-parser.add_argument('--save-path', type=str, default='experiments')
+parser.add_argument('name', type=str)
+parser.add_argument('--cfg', type=str, default='./experiments/yaml/baseline.yaml')
 
 
 def main(cfg):
@@ -108,6 +109,24 @@ if __name__ == '__main__':
 
     cfg.merge_from_file(args.cfg)
     cfg.SAVE_PATH = os.path.join(cfg.SAVE_PATH, 'train')
-    cfg.JOB_NAME = args.job_name
+    if not os.path.isdir(cfg.SAVE_PATH):
+        os.mkdir(cfg.SAVE_PATH)
+
+    cfg.JOB_NAME = args.name
+    save_path = os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME)
+    if not os.path.exists(save_path):
+        os.mkdir(save_path)
+    else:
+        key = input('Delete Existing Directory [y/n]: ')
+        if key == 'n':
+            if cfg.AUTO_RESUME:
+                pass
+            else:
+                raise ValueError("Save directory already exists")
+        elif key == 'y':
+            shutil.rmtree(save_path)
+            os.mkdir(save_path)
+        else:
+            raise ValueError("Input Not Supported!")
 
     main(cfg)

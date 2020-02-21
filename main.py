@@ -94,7 +94,7 @@ def eval(model, test_loader, criterion, epoch, args, writer):
                 writer.add_scalar('Loss/vaild', losses.avg, epoch * len(test_loader) + i)
                 writer.add_scalar('Accuracy/vaild', top1.avg, epoch * len(test_loader) + i)
 
-    return top1
+    return prec1.item()
 
 
 def get_model_parameters(model):

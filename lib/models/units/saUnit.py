@@ -3,7 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
 
+import numpy as np
+
 from lib.models.units.utils import get_same_padding
+from lib.models.units.activation import Hswish
 
 class SAConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, groups=1, bias=False):
@@ -22,6 +25,7 @@ class SAConv(nn.Module):
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=groups)
         self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=groups)
         self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=groups)
+        self.activation = Hswish()
 
         self.reset_parameters()
 
@@ -32,6 +36,7 @@ class SAConv(nn.Module):
         q_out = self.query_conv(x)
         k_out = self.key_conv(padded_x)
         v_out = self.value_conv(padded_x)
+        v_out = self.activation(v_out)
 
         k_out = k_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
         v_out = v_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
@@ -44,7 +49,7 @@ class SAConv(nn.Module):
 
         q_out = q_out.view(batch, self.groups, self.out_channels // self.groups, height, width, 1)
 
-        out = (q_out * k_out).sum(dim=2, keepdim=True) * torch.sqrt((self.groups // self.out_channels).float())
+        out = (q_out * k_out).sum(dim=2, keepdim=True) * np.sqrt((self.groups // self.out_channels))
         out = F.softmax(out, dim=-1)
         out = (out * v_out).sum(dim=-1)
         out = out.view(batch, -1, height, width)

@@ -1,0 +1,6 @@
+TRAIN:
+    MODEL:
+      NAME: 'SAResNet50'
+
+    DATASET:
+      NAME: 'CIFAR100'

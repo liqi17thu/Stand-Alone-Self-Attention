@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+import torch.nn.init as init
 
 from lib.models.units.saUnit import SAStem, SABottleneck
 from lib.models.units.resUnit import Bottleneck
@@ -60,6 +60,11 @@ class SAResNet(nn.Module):
         self.r = nn.Parameter(torch.randn(1, self.r_dim, self.kernel_size, self.kernel_size), requires_grad=True)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+
+
+    def reset_parameters(self):
+        init.normal_(self.r, 0, 1)
+
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)

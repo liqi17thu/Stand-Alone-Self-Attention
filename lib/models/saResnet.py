@@ -4,37 +4,40 @@ import torch.nn.functional as F
 from .units.saUnit import SAStem, SABottleneck
 from .units.resUnit import Bottleneck
 
+
 class SAResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=1000, stem=False):
+    def __init__(self, block, num_blocks, num_classes=1000, stem='cifar_conv'):
         super(SAResNet, self).__init__()
         self.in_places = 64
 
-        if stem:
-            self.init = nn.Sequential(
-                # CIFAR10
-                SAStem(in_channels=3, out_channels=64, kernel_size=4, stride=1, padding=2, groups=1),
-                nn.BatchNorm2d(64),
-                nn.ReLU(),
-
-                # For ImageNet
-                # AttentionStem(in_channels=3, out_channels=64, kernel_size=4, stride=1, padding=2, groups=1),
-                # nn.BatchNorm2d(64),
-                # nn.ReLU(),
-                # nn.MaxPool2d(4, 4)
-            )
+        if stem.split('_')[1] == 'sa':
+            if stem.split('_')[0] == 'cifar':
+                self.init = nn.Sequential(
+                    SAStem(in_channels=3, out_channels=64, kernel_size=4, stride=1, padding=2, groups=1),
+                    nn.BatchNorm2d(64),
+                    nn.ReLU(),
+                )
+            else:
+                self.init = nn.Sequential(
+                    SAStem(in_channels=3, out_channels=64, kernel_size=4, stride=1, padding=2, groups=1),
+                    nn.BatchNorm2d(64),
+                    nn.ReLU(),
+                    nn.MaxPool2d(4, 4)
+                )
         else:
-            self.init = nn.Sequential(
-                # CIFAR10
-                nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                nn.BatchNorm2d(64),
-                nn.ReLU(),
-
-                # For ImageNet
-                # nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
-                # nn.BatchNorm2d(64),
-                # nn.ReLU(),
-                # nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-            )
+            if stem.split('_')[0] == 'cifar':
+                self.init = nn.Sequential(
+                    nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False),
+                    nn.BatchNorm2d(64),
+                    nn.ReLU(),
+                )
+            else:
+                self.init = nn.Sequential(
+                    nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
+                    nn.BatchNorm2d(64),
+                    nn.ReLU(),
+                    nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+                )
 
         if isinstance(block, list):
             self.layer1 = self._make_layer(block[0], 64, num_blocks[0], stride=1)
@@ -49,11 +52,13 @@ class SAResNet(nn.Module):
             self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
             self.dense = nn.Linear(512 * block.expansion, num_classes)
 
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
         for stride in strides:
-            layers.append(block(self.in_places, planes, stride))                    
+            layers.append(block(self.in_places, planes, stride))
             self.in_places = planes * block.expansion
         return nn.Sequential(*layers)
 
@@ -63,7 +68,7 @@ class SAResNet(nn.Module):
         out = self.layer2(out)
         out = self.layer3(out)
         out = self.layer4(out)
-        out = F.avg_pool2d(out, 4)
+        out = self.avgpool(out)
         out = out.view(out.size(0), -1)
         out = self.dense(out)
 
@@ -83,7 +88,6 @@ def SAResNet38(num_classes=1000, stem=False, num_sablock=2):
 def SAResNet50(num_classes=1000, stem=False, num_sablock=2):
     block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
     return SAResNet(block, [3, 4, 6, 3], num_classes=num_classes, stem=stem)
-
 
 # temp = torch.randn((2, 3, 224, 224))
 # model = ResNet38(num_classes=1000, stem=True)

@@ -65,7 +65,7 @@ def imagenet_tar(cfg):
         train_data = data_loader(
             cfg.TRAIN.DATASET.TRAIN_DIR,
             transforms.Compose([
-                transforms.RandomResizedCrop(cfg.TRAIN.DATASET.INPUT_SIZE),
+                transforms.RandomResizedCrop(cfg.TRAIN.DATASET.IMAGE_SIZE),
                 transforms.RandomHorizontalFlip(),
                 ImageNetPolicy(),
                 ToBGRTensor() if cfg.TRAIN.DATASET.BGR else transforms.ToTensor(),
@@ -75,7 +75,7 @@ def imagenet_tar(cfg):
         train_data = data_loader(
             cfg.TRAIN.DATASET.TRAIN_DIR,
             transforms.Compose([
-                transforms.RandomResizedCrop(cfg.TRAIN.DATASET.INPUT_SIZE),
+                transforms.RandomResizedCrop(cfg.TRAIN.DATASET.IMAGE_SIZE),
                 transforms.RandomHorizontalFlip(),
                 transforms.ColorJitter(
                     brightness=0.4,

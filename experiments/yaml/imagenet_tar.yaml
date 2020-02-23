@@ -6,3 +6,4 @@ TRAIN:
       NAME: 'imagenet_tar'
       TRAIN_DIR: './data/imagenet_tar/train.tar'
       TEST_DIR: './data/imagenet_tar/val.tar'
+      IMAGE_SIZE: 224

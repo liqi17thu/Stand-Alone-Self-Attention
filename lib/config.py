@@ -27,7 +27,7 @@ __C.TRAIN.MODEL.PRE_TRAINED = False
 __C.TRAIN.MODEL.NUM_SABLOCK = 2
 
 __C.TRAIN.DATASET = CN()
-__C.TRAIN.DATASET.NAME = 'imagenet'
+__C.TRAIN.DATASET.NAME = 'imagenet_tar'
 __C.TRAIN.DATASET.SPLIT_RATIO = 0.5
 __C.TRAIN.DATASET.TRAIN_DIR = '/data/home/v-had/data_local/imagenet/train'
 __C.TRAIN.DATASET.TEST_DIR = '/data/home/v-had/data_local/imagenet/val'

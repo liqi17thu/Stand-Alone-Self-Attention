@@ -77,7 +77,7 @@ class SAResNet(nn.Module):
         for i in range(4 - self.num_sablock):
             out = self.layers[i](out)
         for i in range(4 - self.num_sablock, 3):
-            for j in layers[i]:
+            for j in self.layers[i]:
                 out = self.layers[i][j](out, self.r)
         out = self.avgpool(out)
         out = out.view(out.size(0), -1)

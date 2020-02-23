@@ -36,8 +36,8 @@ class SAConv(nn.Module):
 
         padded_x = F.pad(x, [self.padding, self.padding, self.padding, self.padding])
         q_out = self.query_conv(x)
-        k_out = self.key_conv(padded_x)
-        v_out = self.value_position_conv(padded_x)
+        k_out = self.key_content_conv(padded_x)
+        v_out = self.value_conv(padded_x)
 
         k_out = k_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
         v_out = v_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)

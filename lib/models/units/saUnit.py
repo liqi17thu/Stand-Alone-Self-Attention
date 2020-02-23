@@ -17,16 +17,14 @@ class SAConv(nn.Module):
         self.padding = padding
         self.heads = heads
 
-        # here we actually assume that hv = hk = out_channels / heads
-        assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
+        # hv = hk = out_channels
+        self.rel_h = nn.Parameter(torch.randn(1, 1, out_channels, 1, 1, kernel_size, 1), requires_grad=True)
+        self.rel_w = nn.Parameter(torch.randn(1, 1, out_channels, 1, 1, 1, kernel_size), requires_grad=True)
 
-        self.rel_h = nn.Parameter(torch.randn(out_channels // 2, 1, 1, kernel_size, 1), requires_grad=True)
-        self.rel_w = nn.Parameter(torch.randn(out_channels // 2, 1, 1, 1, kernel_size), requires_grad=True)
-
-        self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias)
-        self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias)
-        self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias)
-        self.project_conv = nn.Conv2d(out_channels, out_channels, kernel_size=1, bias=bias)
+        self.key_conv = nn.Conv2d(in_channels, out_channels * self.heads, kernel_size=1, bias=bias)
+        self.query_conv = nn.Conv2d(in_channels, out_channels * self.heads, kernel_size=1, bias=bias)
+        self.value_conv = nn.Conv2d(in_channels, out_channels * self.heads, kernel_size=1, bias=bias)
+        self.project_conv = nn.Conv2d(out_channels * self.heads, out_channels, kernel_size=1, bias=bias)
 
         self.reset_parameters()
 
@@ -41,14 +39,14 @@ class SAConv(nn.Module):
         k_out = k_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
         v_out = v_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
 
-        k_out_h, k_out_w = k_out.split(self.out_channels // 2, dim=1)
-        k_out = torch.cat((k_out_h + self.rel_h, k_out_w + self.rel_w), dim=1)
+        k_out = k_out.contiguous().view(batch, self.heads, self.out_channels, height, width, self.kernel_size, self.kernel_size)
+        k_out = k_out + self.rel_w + self.rel_h
 
-        k_out = k_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height, width, -1)
-        v_out = v_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height, width, -1)
-        q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height, width, 1)
+        k_out = k_out.contiguous().view(batch, self.heads, self.out_channels, height, width, -1)
+        v_out = v_out.contiguous().view(batch, self.heads, self.out_channels, height, width, -1)
+        q_out = q_out.view(batch, self.heads, self.out_channels, height, width, 1)
 
-        out = (q_out * k_out).sum(dim=2, keepdim=True) * np.sqrt((self.heads // self.out_channels))
+        out = (q_out * k_out).sum(dim=2, keepdim=True) * np.sqrt(self.out_channels)
         out = F.softmax(out, dim=-1)
         out = (out * v_out).sum(dim=-1)
         out = out.view(batch, -1, height, width)

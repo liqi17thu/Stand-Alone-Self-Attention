@@ -1,6 +1,7 @@
 TRAIN:
     MODEL:
       NAME: 'SAResNet50'
+      STEM: 'imagenet_conv'
 
     DATASET:
       NAME: 'imagenet_tar'

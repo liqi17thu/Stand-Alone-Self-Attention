@@ -3,6 +3,6 @@ TRAIN:
       NAME: 'SAResNet50'
 
     DATASET:
-      NAME: 'imagenet_tar'
+      NAME: 'imagenet'
       TRAIN_DIR: './data/imagenet/train'
       TEST_DIR: './data/imagenet/val'

@@ -55,7 +55,7 @@ class SAResNet(nn.Module):
             self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
             self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
             self.dense = nn.Linear(512 * block.expansion, num_classes)
-        self.layers = [self.layer1, self.layer2, self.layer3, self.layer4]
+        self.layers = nn.Sequential(self.layer1, self.layer2, self.layer3, self.layer4)
 
         self.r = nn.Parameter(torch.randn(1, self.r_dim, self.kernel_size, self.kernel_size), requires_grad=True)
 

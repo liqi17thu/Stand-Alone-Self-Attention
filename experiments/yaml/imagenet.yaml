@@ -4,4 +4,5 @@ TRAIN:
 
     DATASET:
       NAME: 'CIFAR100'
-      IMAGE_SIZE: 32
+      TRAIN_DIR: 'todo'
+      TEST_DIR: 'todo'

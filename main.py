@@ -6,7 +6,7 @@ import os
 import argparse
 import shutil
 
-from lib.data.preprocess import load_data
+from lib.data import *
 from lib.models.saResnet import *
 from lib.core.train import train
 from lib.core.vaild import validate
@@ -21,15 +21,9 @@ parser.add_argument('--cfg', type=str, default='./experiments/yaml/baseline.yaml
 
 def main(cfg):
     logger = get_logger(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'train.log'))
-    writer = SummaryWriter(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'runs'))
+    # writer = SummaryWriter(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'runs'))
 
-    train_loader, test_loader = load_data(cfg)
-    if cfg.TRAIN.DATASET.NAME == 'CIFAR10':
-        num_classes = 10
-    elif cfg.TRAIN.DATASET.NAME == 'CIFAR100':
-        num_classes = 100
-    elif cfg.TRAIN.DATASET.NAME == 'IMAGENET':
-        num_classes = 1000
+    train_loader, test_loader, num_classes = eval(cfg.TRAIN.DATASET.NAME)(cfg)
 
     print('img_size: {}, num_classes: {}, stem: {}'.format(cfg.TRAIN.DATASET.IMAGE_SIZE,
                                                            num_classes,

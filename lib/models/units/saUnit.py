@@ -5,8 +5,8 @@ import torch.nn.init as init
 
 import numpy as np
 
-from lib.models.units.utils import get_same_padding
-from lib.models.units.activation import Hswish
+from .utils import get_same_padding
+from .activation import Hswish
 
 class SAConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, groups=1, bias=False):

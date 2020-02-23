@@ -152,8 +152,8 @@ class SABottleneck(nn.Module):
         )
 
         padding = get_same_padding(kernel_size)
-        self.conv2 = nn.Sequential(
-            SAConv(width, width, kernel_size=self.kernel_size, padding=padding, groups=heads, r_dim=r_dim),
+        self.SAconv = SAConv(width, width, kernel_size=self.kernel_size, padding=padding, groups=heads, r_dim=r_dim)
+        self.non_linear = nn.Sequential(
             nn.BatchNorm2d(width),
             nn.ReLU(),
         )
@@ -172,7 +172,8 @@ class SABottleneck(nn.Module):
 
     def forward(self, x, r):
         out = self.conv1(x)
-        out = self.conv2(out, r)
+        out = self.SAconv(out, r)
+        out = self.non_linear(out)
         out = self.conv3(out)
         if self.stride >= 2:
             out = F.avg_pool2d(out, (self.stride, self.stride))

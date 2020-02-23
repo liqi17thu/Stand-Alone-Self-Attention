@@ -1,14 +1,18 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .units.saUnit import SAStem, SABottleneck
-from .units.resUnit import Bottleneck
+from lib.models.units.saUnit import SAStem, SABottleneck
+from lib.models.units.resUnit import Bottleneck
 
 
 class SAResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=1000, stem='cifar_conv'):
+    def __init__(self, block, num_blocks, num_classes=1000, stem='cifar_conv', num_sablock=2):
         super(SAResNet, self).__init__()
+        self.num_sablock = num_sablock
         self.in_places = 64
+        self.kernel_size = 7
+        self.r_dim = 256
 
         if stem.split('_')[1] == 'sa':
             if stem.split('_')[0] == 'cifar':
@@ -51,6 +55,9 @@ class SAResNet(nn.Module):
             self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
             self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
             self.dense = nn.Linear(512 * block.expansion, num_classes)
+        self.layers = [self.layer1, self.layer2, self.layer3, self.layer4]
+
+        self.r = nn.Parameter(torch.randn(1, self.r_dim, self.kernel_size, self.kernel_size), requires_grad=True)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
@@ -59,15 +66,19 @@ class SAResNet(nn.Module):
         layers = []
         for stride in strides:
             layers.append(block(self.in_places, planes, stride))
+            if isinstance(block, SABottleneck):
+                layers[-1].kernel_size = self.kernel_size
+                layers[-1].r_dim = self.r_dim
             self.in_places = planes * block.expansion
         return nn.Sequential(*layers)
 
     def forward(self, x):
         out = self.init(x)
-        out = self.layer1(out)
-        out = self.layer2(out)
-        out = self.layer3(out)
-        out = self.layer4(out)
+
+        for i in range(4 - self.num_sablock):
+            out = self.layers[i](out)
+        for j in range(4 - self.num_sablock, self.num_sablock):
+            out = self.layers[j](out, self.r)
         out = self.avgpool(out)
         out = out.view(out.size(0), -1)
         out = self.dense(out)
@@ -75,19 +86,19 @@ class SAResNet(nn.Module):
         return out
 
 
-def SAResNet26(num_classes=1000, stem=False, num_sablock=2):
+def SAResNet26(num_classes=1000, stem='cifar_conv', num_sablock=2):
     block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
-    return SAResNet(block, [1, 2, 4, 1], num_classes=num_classes, stem=stem)
+    return SAResNet(block, [1, 2, 4, 1], num_classes=num_classes, stem=stem, num_sablock=num_sablock)
 
 
-def SAResNet38(num_classes=1000, stem=False, num_sablock=2):
+def SAResNet38(num_classes=1000, stem='cifar_conv', num_sablock=2):
     block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
-    return SAResNet(block, [2, 3, 5, 2], num_classes=num_classes, stem=stem)
+    return SAResNet(block, [2, 3, 5, 2], num_classes=num_classes, stem=stem, num_sablock=num_sablock)
 
 
-def SAResNet50(num_classes=1000, stem=False, num_sablock=2):
+def SAResNet50(num_classes=1000, stem='cifar_conv', num_sablock=2):
     block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
-    return SAResNet(block, [3, 4, 6, 3], num_classes=num_classes, stem=stem)
+    return SAResNet(block, [3, 4, 6, 3], num_classes=num_classes, stem=stem, num_sablock=num_sablock)
 
 # temp = torch.randn((2, 3, 224, 224))
 # model = ResNet38(num_classes=1000, stem=True)

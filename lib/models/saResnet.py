@@ -74,11 +74,11 @@ class SAResNet(nn.Module):
 
     def forward(self, x):
         out = self.init(x)
-
         for i in range(4 - self.num_sablock):
             out = self.layers[i](out)
-        for j in range(4 - self.num_sablock, self.num_sablock):
-            out = self.layers[j](out, self.r)
+        for i in range(4 - self.num_sablock, 3):
+            for j in layers[i]:
+                out = self.layers[i][j](out, self.r)
         out = self.avgpool(out)
         out = out.view(out.size(0), -1)
         out = self.dense(out)

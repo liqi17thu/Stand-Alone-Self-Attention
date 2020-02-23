@@ -3,6 +3,6 @@ TRAIN:
       NAME: 'SAResNet50'
 
     DATASET:
-      NAME: 'CIFAR100'
-      TRAIN_DIR: 'todo'
-      TEST_DIR: 'todo'
+      NAME: 'imagenet'
+      TRAIN_DIR: './data/imagenet/train'
+      TEST_DIR: './data/imagenet/val'

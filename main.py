@@ -21,7 +21,7 @@ parser.add_argument('--cfg', type=str, default='./experiments/yaml/baseline.yaml
 
 def main(cfg):
     logger = get_logger(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'train.log'))
-    # writer = SummaryWriter(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'runs'))
+    writer = SummaryWriter(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'runs'))
 
     train_loader, test_loader, num_classes = eval(cfg.TRAIN.DATASET.NAME)(cfg)
 

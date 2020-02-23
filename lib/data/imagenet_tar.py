@@ -5,7 +5,7 @@ import torchvision.transforms as transforms
 
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
-from .data_util import ImageNetPolicy, SubsetDistributedSampler, ToBGRTensor
+from lib.data.data_util import ImageNetPolicy, SubsetDistributedSampler, ToBGRTensor
 
 
 class ImageTarDataset(Dataset):

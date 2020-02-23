@@ -64,8 +64,7 @@ def main(cfg):
         model = model.cuda()
         criterion = criterion.cuda()
 
-    print("Number of model parameters: ", get_model_parameters(model))
-    logger.info("Number of model parameters: {0}".format(get_model_parameters(model)))
+    logger.info("Number of model parameters: {0:.2f}M".format(get_model_parameters(model)/1000000))
 
     for epoch in range(start_epoch, cfg.TRAIN.EPOCH + 1):
         train(model, train_loader, optimizer, criterion, epoch, cfg, logger, writer)

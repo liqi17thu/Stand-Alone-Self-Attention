@@ -163,7 +163,7 @@ class GradualWarmupScheduler(_LRScheduler):
 def get_scheduler(optimizer, n_iter_per_epoch, cfg):
     cosine_scheduler = CosineAnnealingLR(
         optimizer=optimizer, eta_min=0.000001,
-        T_max=(cfg.TRAIN.EPOCH - cfg.START_EPOCH - cfg.TRAIN.WARMUP_EPOCH) * n_iter_per_epoch)
+        T_max=(cfg.TRAIN.EPOCH - cfg.TRAIN.START_EPOCH - cfg.TRAIN.WARMUP_EPOCH) * n_iter_per_epoch)
     scheduler = GradualWarmupScheduler(
         optimizer,
         multiplier=cfg.WARMUP_MULTIPLIER,

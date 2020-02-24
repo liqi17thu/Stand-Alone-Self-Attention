@@ -151,7 +151,7 @@ class SABottleneck(nn.Module):
 
         padding = get_same_padding(kernel_size)
         self.conv2 = nn.Sequential(
-            SAConv(width, width, kernel_size=self.kernel_size, padding=padding, groups=heads),
+            SAConv(width, width, kernel_size=self.kernel_size, padding=padding, groups=width),
             nn.BatchNorm2d(width),
             nn.ReLU(),
         )

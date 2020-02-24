@@ -18,7 +18,6 @@ parser = argparse.ArgumentParser('parameters')
 parser.add_argument('name', type=str)
 parser.add_argument('--cfg', type=str, default='./experiments/yaml/baseline.yaml')
 
-
 def main(cfg):
     logger = get_logger(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'train.log'))
     writer = SummaryWriter(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'runs'))
@@ -31,6 +30,8 @@ def main(cfg):
 
     print('Model Name: {0}'.format(cfg.TRAIN.MODEL.NAME))
     model = eval(cfg.TRAIN.MODEL.NAME)(num_classes=num_classes,
+                                       heads=cfg.TRAIN.MODEL.HEADS,
+                                       kernel_size=cfg.TRAIN.MODEL.KERNEL,
                                        stem=cfg.TRAIN.MODEL.STEM,
                                        num_sablock=cfg.TRAIN.MODEL.NUM_SABLOCK)
 

@@ -6,9 +6,11 @@ from .units.resUnit import Bottleneck
 
 
 class SAResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=1000, stem='cifar_conv'):
+    def __init__(self, block, num_blocks, num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv'):
         super(SAResNet, self).__init__()
         self.in_places = 64
+        self.heads = heads
+        self.kernel_size = kernel_size
 
         if stem.split('_')[1] == 'sa':
             if stem.split('_')[0] == 'cifar':
@@ -39,18 +41,11 @@ class SAResNet(nn.Module):
                     nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
                 )
 
-        if isinstance(block, list):
-            self.layer1 = self._make_layer(block[0], 64, num_blocks[0], stride=1)
-            self.layer2 = self._make_layer(block[1], 128, num_blocks[1], stride=2)
-            self.layer3 = self._make_layer(block[2], 256, num_blocks[2], stride=2)
-            self.layer4 = self._make_layer(block[3], 512, num_blocks[3], stride=2)
-            self.dense = nn.Linear(512 * block[3].expansion, num_classes)
-        else:
-            self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
-            self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
-            self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
-            self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
-            self.dense = nn.Linear(512 * block.expansion, num_classes)
+        self.layer1 = self._make_layer(block[0], 64, num_blocks[0], stride=1)
+        self.layer2 = self._make_layer(block[1], 128, num_blocks[1], stride=2)
+        self.layer3 = self._make_layer(block[2], 256, num_blocks[2], stride=2)
+        self.layer4 = self._make_layer(block[3], 512, num_blocks[3], stride=2)
+        self.dense = nn.Linear(512 * block[3].expansion, num_classes)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
@@ -59,6 +54,9 @@ class SAResNet(nn.Module):
         layers = []
         for stride in strides:
             layers.append(block(self.in_places, planes, stride))
+            if isinstance(block, SABottleneck):
+                layers[-1].heads = self.heads
+                layers[-1].kernel_size = self.kernel_size
             self.in_places = planes * block.expansion
         return nn.Sequential(*layers)
 
@@ -75,19 +73,19 @@ class SAResNet(nn.Module):
         return out
 
 
-def SAResNet26(num_classes=1000, stem=False, num_sablock=2):
+def SAResNet26(num_classes=1000, heads=8, kernel_size=7, stem=False, num_sablock=2):
     block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
-    return SAResNet(block, [1, 2, 4, 1], num_classes=num_classes, stem=stem)
+    return SAResNet(block, [1, 2, 4, 1], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem)
 
 
-def SAResNet38(num_classes=1000, stem=False, num_sablock=2):
+def SAResNet38(num_classes=1000, heads=8, kernel_size=7, stem=False, num_sablock=2):
     block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
-    return SAResNet(block, [2, 3, 5, 2], num_classes=num_classes, stem=stem)
+    return SAResNet(block, [2, 3, 5, 2], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem)
 
 
-def SAResNet50(num_classes=1000, stem=False, num_sablock=2):
+def SAResNet50(num_classes=1000, heads=8, kernel_size=7, stem=False, num_sablock=2):
     block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
-    return SAResNet(block, [3, 4, 6, 3], num_classes=num_classes, stem=stem)
+    return SAResNet(block, [3, 4, 6, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem)
 
 # temp = torch.randn((2, 3, 224, 224))
 # model = ResNet38(num_classes=1000, stem=True)

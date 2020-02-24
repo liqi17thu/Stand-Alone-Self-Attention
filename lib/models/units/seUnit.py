@@ -3,6 +3,7 @@ import torch.nn as nn
 from .activation import Hsigmoid
 from lib.utils import make_divisible
 
+
 class SEModule(nn.Module):
     REDUCTION = 4
 

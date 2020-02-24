@@ -2,10 +2,10 @@ import torch.nn as nn
 
 import time
 
-from lib.utils import AvgrageMeter, adjust_learning_rate, accuracy
+from lib.utils import AvgrageMeter, accuracy
 
 
-def train(model, train_loader, optimizer, criterion, epoch, cfg, logger, writer):
+def train(model, train_loader, optimizer, criterion, scheduler, epoch, cfg, logger, writer):
     top1 = AvgrageMeter()
     top5 = AvgrageMeter()
     losses = AvgrageMeter()
@@ -15,7 +15,6 @@ def train(model, train_loader, optimizer, criterion, epoch, cfg, logger, writer)
     step = 0
     for i, (data, target) in enumerate(train_loader):
         sta_time = time.time()
-        adjust_learning_rate(optimizer, epoch, cfg.TRAIN.OPTIM.LR)
         if cfg.CUDA:
             data, target = data.cuda(), target.cuda()
 
@@ -26,6 +25,9 @@ def train(model, train_loader, optimizer, criterion, epoch, cfg, logger, writer)
         loss.backward()
         nn.utils.clip_grad_norm_(model.parameters(), 1.0)
         optimizer.step()
+
+        if scheduler is not None:
+            scheduler.step(epoch * len(train_loader) + i)
 
         prec1, prec5 = accuracy(output, target, topk=(1, 5))
 
@@ -43,3 +45,4 @@ def train(model, train_loader, optimizer, criterion, epoch, cfg, logger, writer)
 
             writer.add_scalar('Loss/train', losses.avg, epoch * len(train_loader) + i)
             writer.add_scalar('Accuracy/train', top1.avg, epoch * len(train_loader) + i)
+            writer.add_scalar('Learning Rate', optimizer.param_groups[0]['lr'], epoch * len(train_loader) + i)

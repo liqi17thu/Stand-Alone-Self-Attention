@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.optim.lr_scheduler import _LRScheduler, CosineAnnealingLR
 
 import os
 import shutil
@@ -110,6 +111,7 @@ def get_logger(file_path):
 
     return logger
 
+
 class CrossEntropyLabelSmooth(nn.Module):
 
     def __init__(self, num_classes, epsilon):
@@ -126,3 +128,45 @@ class CrossEntropyLabelSmooth(nn.Module):
             targets + self.epsilon / self.num_classes
         loss = (-targets * log_probs).mean(0).sum()
         return loss
+
+
+class GradualWarmupScheduler(_LRScheduler):
+    """ Gradually warm-up(increasing) learning rate in optimizer.
+    Proposed in 'Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour'.
+    Args:
+        optimizer (Optimizer): Wrapped optimizer.
+        multiplier: target learning rate = base lr * multiplier
+        total_epoch: target learning rate is reached at total_epoch, gradually
+        after_scheduler: after target_epoch, use this scheduler(eg. ReduceLROnPlateau)
+    """
+
+    def __init__(self, optimizer, multiplier, total_epoch, after_scheduler):
+        self.multiplier = multiplier
+        if self.multiplier <= 1.:
+            raise ValueError('multiplier should be greater than 1.')
+        self.total_epoch = total_epoch
+        self.after_scheduler = after_scheduler
+        self.finished = False
+        super().__init__(optimizer)
+
+    def get_lr(self):
+        return [base_lr / self.multiplier * ((self.multiplier - 1.) * self.last_epoch / self.total_epoch + 1.)
+                for base_lr in self.base_lrs]
+
+    def step(self, epoch):
+        if epoch > self.total_epoch:
+            self.after_scheduler.step(epoch - self.total_epoch)
+        else:
+            super(GradualWarmupScheduler, self).step(epoch)
+
+
+def get_scheduler(optimizer, n_iter_per_epoch, cfg):
+    cosine_scheduler = CosineAnnealingLR(
+        optimizer=optimizer, eta_min=0.000001,
+        T_max=(cfg.TRAIN.EPOCH - cfg.START_EPOCH - cfg.TRAIN.WARMUP_EPOCH) * n_iter_per_epoch)
+    scheduler = GradualWarmupScheduler(
+        optimizer,
+        multiplier=cfg.WARMUP_MULTIPLIER,
+        total_epoch=cfg.TRAIN.WARMUP_EPOCH * n_iter_per_epoch,
+        after_scheduler=cosine_scheduler)
+    return scheduler

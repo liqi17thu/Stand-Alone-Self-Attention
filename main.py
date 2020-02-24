@@ -11,7 +11,8 @@ from lib.models.saResnet import *
 from lib.core.train import train
 from lib.core.vaild import validate
 from lib.config import cfg
-from lib.utils import save_checkpoint, get_model_parameters, get_logger, CrossEntropyLabelSmooth
+from lib.utils import save_checkpoint, get_model_parameters, get_logger
+from lib.utils import CrossEntropyLabelSmooth, get_scheduler
 
 
 parser = argparse.ArgumentParser('parameters')
@@ -58,6 +59,7 @@ def main(cfg):
         criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=cfg.TRAIN.OPTIM.LR,
                           momentum=cfg.TRAIN.OPTIM.MOMENTUM, weight_decay=cfg.TRAIN.OPTIM.WD)
+    scheduler = get_scheduler(optimizer, len(train_loader), cfg)
 
     if cfg.CUDA:
         if torch.cuda.device_count() > 1:
@@ -68,7 +70,7 @@ def main(cfg):
     logger.info("Number of model parameters: {0:.2f}M".format(get_model_parameters(model)/1000000))
 
     for epoch in range(start_epoch, cfg.TRAIN.EPOCH + 1):
-        train(model, train_loader, optimizer, criterion, epoch, cfg, logger, writer)
+        train(model, train_loader, optimizer, criterion, scheduler, epoch, cfg, logger, writer)
         eval_acc = validate(model, test_loader, criterion, epoch, cfg, logger, writer)
 
         is_best = eval_acc > best_acc

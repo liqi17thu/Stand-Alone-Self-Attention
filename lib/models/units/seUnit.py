@@ -1,23 +1,27 @@
 import torch.nn as nn
 
+from .activation import Hsigmoid
+from lib.utils import make_divisible
 
 class SEModule(nn.Module):
+    REDUCTION = 4
 
-    def __init__(self, channels, reduction):
+    def __init__(self, channel):
         super(SEModule, self).__init__()
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.fc1 = nn.Conv2d(channels, channels // reduction, kernel_size=1,
-                             padding=0)
-        self.relu = nn.ReLU(inplace=True)
-        self.fc2 = nn.Conv2d(channels // reduction, channels, kernel_size=1,
-                             padding=0)
-        self.sigmoid = nn.Sigmoid()
+
+        self.channel = channel
+        self.reduction = SEModule.REDUCTION
+
+        num_mid = make_divisible(self.channel // self.reduction, divisor=8)
+
+        self.fc = nn.Sequential(
+            nn.Conv2d(self.channel, num_mid, 1, 1, 0, bias=True),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(num_mid, self.channel, 1, 1, 0, bias=True),
+            Hsigmoid(inplace=True),
+        )
 
     def forward(self, x):
-        module_input = x
-        x = self.avg_pool(x)
-        x = self.fc1(x)
-        x = self.relu(x)
-        x = self.fc2(x)
-        x = self.sigmoid(x)
-        return module_input * x
+        y = x.mean(3, keepdim=True).mean(2, keepdim=True)
+        y = self.fc(y)
+        return x * y

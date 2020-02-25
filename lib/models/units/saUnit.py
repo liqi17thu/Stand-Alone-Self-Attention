@@ -67,11 +67,11 @@ class SAConv(nn.Module):
 
 class SAPooling(nn.Module):
     def __init__(self, channels, heads=1, bias=False):
-        super(SAConv, self).__init__()
+        super(SAPooling, self).__init__()
         self.channels = channels
         self.heads = heads
 
-        assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
+        assert self.channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
         self.query = nn.Parameter(torch.randn(1, heads, channels // heads), requires_grad=True)
         self.key_conv = nn.Conv2d(channels, channels, kernel_size=1, bias=bias, groups=heads)

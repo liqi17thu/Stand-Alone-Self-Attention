@@ -8,6 +8,7 @@ import numpy as np
 from .utils import get_same_padding
 from .activation import Hswish
 
+
 class SAConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False):
         super(SAConv, self).__init__()

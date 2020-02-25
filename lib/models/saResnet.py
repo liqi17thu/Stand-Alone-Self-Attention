@@ -53,10 +53,10 @@ class SAResNet(nn.Module):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
         for stride in strides:
-            layers.append(block(self.in_places, planes, stride))
-            if isinstance(block, SABottleneck):
-                layers[-1].heads = self.heads
-                layers[-1].kernel_size = self.kernel_size
+            if block.__name__ == "SABottleneck":
+                layers.append(block(self.in_places, planes, stride, kernel_size=self.kernel_size, heads=self.heads))
+            else:
+                layers.append(block(self.in_places, planes, stride))
             self.in_places = planes * block.expansion
         return nn.Sequential(*layers)
 

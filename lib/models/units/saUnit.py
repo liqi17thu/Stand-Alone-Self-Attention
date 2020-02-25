@@ -65,6 +65,53 @@ class SAConv(nn.Module):
         init.normal_(self.rel_w, 0, 1)
 
 
+class SAPooling(nn.Module):
+    def __init__(self, channels, heads=1, bias=False):
+        super(SAConv, self).__init__()
+        self.channels = channels
+        self.heads = heads
+
+        assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
+
+        self.query = nn.Parameter(torch.randn(1, heads, channels // heads), requires_grad=True)
+        self.key_conv = nn.Conv2d(channels, channels, kernel_size=1, bias=bias, groups=heads)
+        self.value_conv = nn.Conv2d(channels, channels, kernel_size=1, bias=bias, groups=heads)
+        self.activation = Hswish()
+
+        self.reset_parameters()
+
+    def forward(self, x):
+        batch, channels, height, width = x.size()
+
+        k_out = self.key_conv(x)
+        v_out = self.value_conv(x)
+        v_out = self.activation(v_out)
+
+        k_out = k_out.view(batch, self.heads, self.out_channels // self.heads, height, width)
+        k_out = k_out.permute(2, 0, 1, 3, 4).contiguous()
+        k_out = k_out.view(self.out_channels // self.heads, -1)
+
+        v_out = v_out.view(batch, self.heads, self.out_channels // self.heads, height, width)
+        v_out = v_out.permute(0, 1, 3, 4, 2).contiguous()
+        v_out = v_out.view(-1, self.out_channels // self.heads)
+
+        q_out = self.query.repeat(batch, 1, 1)
+        q_out = q_out.view(-1, self.channels // self.heads)
+
+        out = torch.mm(q_out, k_out) * np.sqrt((self.heads // self.out_channels))
+        out = F.softmax(out, dim=-1)
+        out = torch.mm(out, v_out)
+        out = out.view(batch, self.channels, 1, 1)
+
+        return out
+
+    def reset_parameters(self):
+        init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
+        init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
+
+        init.normal_(self.query, 0, 1)
+
+
 class SAStem(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, groups=1, m=4, bias=False):
         super(SAStem, self).__init__()

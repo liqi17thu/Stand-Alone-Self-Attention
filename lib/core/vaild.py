@@ -32,7 +32,7 @@ def validate(model, test_loader, criterion, epoch, cfg, logger, writer):
 
             step += 1
             if step % cfg.TRAIN.DISP == 0:
-                logger.info("Train: Epoch {}/{}  Time: {:.3f} Loss {losses.avg:.3f} "
+                logger.info("Test: Epoch {}/{}  Time: {:.3f} Loss {losses.avg:.3f} "
                             "Prec@(1,5) ({top1.avg:.1%}, {top5.avg:.1%})".format(
                     epoch, cfg.TRAIN.EPOCH, (time.time() - sta_time) / cfg.TRAIN.DISP,
                     losses=losses, top1=top1, top5=top5))

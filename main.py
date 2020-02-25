@@ -44,12 +44,13 @@ def main(cfg):
         checkpoint = torch.load(file_path)
 
         model.load_state_dict(checkpoint['state_dict'])
-        cfg.TRAIN.START_EPOCH = checkpoint['epoch']
+        start_epoch = checkpoint['epoch']
         best_acc = checkpoint['best_acc']
         model_parameters = checkpoint['parameters']
         print('Load model, Parameters: {0}, Start_epoch: {1}, Acc: {2}'.format(model_parameters, start_epoch, best_acc))
         logger.info('Load model, Parameters: {0}, Start_epoch: {1}, Acc: {2}'.format(model_parameters, start_epoch, best_acc))
     else:
+        start_epoch = cfg.TRAIN.START_EPOCH
         best_acc = 0.0
 
     if cfg.TRAIN.CRIT.SMOOTH > 0:
@@ -68,7 +69,7 @@ def main(cfg):
 
     logger.info("Number of model parameters: {0:.2f}M".format(get_model_parameters(model)/1000000))
 
-    for epoch in range(cfg.TRAIN.START_EPOCH, cfg.TRAIN.EPOCH + 1):
+    for epoch in range(start_epoch, cfg.TRAIN.EPOCH + 1):
         train(model, train_loader, optimizer, criterion, scheduler, epoch, cfg, logger, writer)
         eval_acc = validate(model, test_loader, criterion, epoch, cfg, logger, writer)
 

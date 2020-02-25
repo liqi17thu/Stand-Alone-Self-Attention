@@ -45,15 +45,16 @@ class SAConv(nn.Module):
         k_out_h, k_out_w = k_out.split(self.out_channels // 2, dim=1)
         k_out = torch.cat((k_out_h + self.rel_h, k_out_w + self.rel_w), dim=1)
 
-        k_out = k_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height, width, -1)
-        v_out = v_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height, width, -1)
+        k_out = k_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride, -1)
+        v_out = v_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride, -1)
 
-        q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height, width, 1)
+        q_out = q_out[:, :, ::self.stride, ::self.stride]
+        q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride, 1)
 
         out = (q_out * k_out).sum(dim=2, keepdim=True) * np.sqrt((self.heads // self.out_channels))
         out = F.softmax(out, dim=-1)
         out = (out * v_out).sum(dim=-1)
-        out = out.view(batch, -1, height, width)
+        out = out.view(batch, -1, height // self.stride, width // self.stride)
 
         return out
 

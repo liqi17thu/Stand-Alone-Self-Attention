@@ -26,6 +26,7 @@ class SAConv(nn.Module):
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
 
         self.reset_parameters()
 
@@ -54,12 +55,15 @@ class SAConv(nn.Module):
         out = (out * v_out).sum(dim=-1)
         out = out.view(batch, -1, height // self.stride, width // self.stride)
 
-        return out
+        conv_out = self.conv(x)
+
+        return out + conv_out
 
     def reset_parameters(self):
         init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.query_conv.weight, mode='fan_out', nonlinearity='relu')
+        init.kaiming_normal_(self.conv.weight, mode='fan_out', nonlinearity='relu')
 
         init.normal_(self.rel_h, 0, 1)
         init.normal_(self.rel_w, 0, 1)
@@ -199,7 +203,7 @@ class SABottleneck(nn.Module):
 
         padding = get_same_padding(kernel_size)
         self.conv2 = nn.Sequential(
-            SAConv(width, width, kernel_size=self.kernel_size, padding=padding, heads=self.heads),
+            SAConv(width, width, kernel_size=self.kernel_size, stride=self.stride, padding=padding, heads=self.heads),
             nn.BatchNorm2d(width),
             nn.ReLU(),
         )
@@ -220,8 +224,6 @@ class SABottleneck(nn.Module):
         out = self.conv1(x)
         out = self.conv2(out)
         out = self.conv3(out)
-        if self.stride >= 2:
-            out = F.avg_pool2d(out, (self.stride, self.stride))
 
         out += self.shortcut(x)
         out = F.relu(out)

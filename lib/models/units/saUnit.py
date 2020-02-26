@@ -24,7 +24,7 @@ class SAConv(nn.Module):
         self.rel_w = nn.Parameter(torch.randn(out_channels // 2, 1, 1, 1, kernel_size), requires_grad=True)
 
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
-        self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
+        self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, stride=stride, groups=heads)
         self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, bias=bias, stride=stride, padding=1)
 
@@ -47,7 +47,6 @@ class SAConv(nn.Module):
         k_out = k_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride, -1)
         v_out = v_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride, -1)
 
-        q_out = q_out[:, :, ::self.stride, ::self.stride]
         q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride, 1)
 
         out = (q_out * k_out).sum(dim=2, keepdim=True) * np.sqrt((self.heads // self.out_channels))

@@ -73,20 +73,26 @@ class SAResNet(nn.Module):
         return out
 
 
-def SAResNet26(num_classes=1000, heads=8, kernel_size=7, stem=False, num_sablock=2):
+def SAResNet26(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_sablock=2):
     block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
     return SAResNet(block, [1, 2, 4, 1], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem)
 
 
-def SAResNet38(num_classes=1000, heads=8, kernel_size=7, stem=False, num_sablock=2):
+def SAResNet38(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_sablock=2):
     block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
     return SAResNet(block, [2, 3, 5, 2], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem)
 
 
-def SAResNet50(num_classes=1000, heads=8, kernel_size=7, stem=False, num_sablock=2):
+def SAResNet50(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_sablock=2):
     block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
     return SAResNet(block, [3, 4, 6, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem)
 
-# temp = torch.randn((2, 3, 224, 224))
-# model = ResNet38(num_classes=1000, stem=True)
-# print(get_model_parameters(model))
+
+def ResNet101(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_sablock=2):
+    block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
+    return SAResNet(block, [3, 4, 23, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem)
+
+
+def ResNet152(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_sablock=2):
+    block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
+    return SAResNet(block, [3, 4, 36, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem)

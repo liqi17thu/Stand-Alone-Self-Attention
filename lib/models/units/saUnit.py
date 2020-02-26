@@ -26,7 +26,6 @@ class SAConv(nn.Module):
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
-        self.activation = Hswish()
 
         self.reset_parameters()
 
@@ -37,7 +36,6 @@ class SAConv(nn.Module):
         q_out = self.query_conv(x)
         k_out = self.key_conv(padded_x)
         v_out = self.value_conv(padded_x)
-        v_out = self.activation(v_out)
 
         k_out = k_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
         v_out = v_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)

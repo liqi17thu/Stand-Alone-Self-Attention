@@ -26,6 +26,7 @@ class SAConv(nn.Module):
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, bias=1)
         self.activation = Hswish()
 
         self.reset_parameters()
@@ -56,12 +57,15 @@ class SAConv(nn.Module):
         out = (out * v_out).sum(dim=-1)
         out = out.view(batch, -1, height // self.stride, width // self.stride)
 
-        return out
+        conv_out = self.conv(x)
+
+        return out + conv_out
 
     def reset_parameters(self):
         init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.query_conv.weight, mode='fan_out', nonlinearity='relu')
+        init.kaiming_normal_(self.conv.weight, mode='fan_out', nonlinearity='relu')
 
         init.normal_(self.rel_h, 0, 1)
         init.normal_(self.rel_w, 0, 1)

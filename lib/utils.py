@@ -97,7 +97,7 @@ def make_divisible(v, divisor, min_val=None):
 # DEBUG < INFO < WARNING < ERROR < CRITICAL
 def get_logger(file_path):
     """ Make python logger """
-    logger = logging.getLogger('supernet')
+    logger = logging.getLogger()
     log_format = '%(asctime)s | %(message)s'
     formatter = logging.Formatter(log_format, datefmt='%m/%d %I:%M:%S %p')
     file_handler = logging.FileHandler(file_path)

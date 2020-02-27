@@ -80,7 +80,7 @@ class DynamicConv(nn.Module):
         self.padding = padding
         self.heads = heads
 
-        assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
+        assert self.channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
         self.filter = nn.Parameter(torch.randn(channels, kernel_size * kernel_size * heads), requires_grad=True)
 

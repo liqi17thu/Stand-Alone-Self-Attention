@@ -45,4 +45,4 @@ def train(model, train_loader, optimizer, criterion, scheduler, epoch, cfg, logg
 
             writer.add_scalar('Loss/train', losses.avg, epoch * len(train_loader) + i)
             writer.add_scalar('Accuracy/train', top1.avg, epoch * len(train_loader) + i)
-            writer.add_scalar('Learning Rate', optimizer.param_groups[0]['lr'], epoch * len(train_loader) + i)
+            writer.add_scalar('Learning_Rate', optimizer.param_groups[0]['lr'], epoch * len(train_loader) + i)

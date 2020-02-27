@@ -101,7 +101,7 @@ class DynamicConv(nn.Module):
         padded_x = padded_x.permute(0, 2, 3, 4, 5, 1).contiguous()
         # padded_x shape: B, H/s, W/s, K, K, C
 
-        out = (padded_x * sep_filter).sum(3).sum(4)
+        out = (padded_x * sep_filter).sum(4).sum(3)
         out = out.permute(0, 3, 1, 2).contiguous()
 
         return out
@@ -235,6 +235,9 @@ class SABottleneck(nn.Module):
         self.kernel_size = kernel_size
 
         width = int(out_channels * (base_width / 64.)) * groups
+
+        print("out channels:{}".format(out_channels))
+        print("width:{}".format(width))
 
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_channels, width, kernel_size=1, bias=False),

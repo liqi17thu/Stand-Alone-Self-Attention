@@ -236,9 +236,6 @@ class SABottleneck(nn.Module):
 
         width = int(out_channels * (base_width / 64.)) * groups
 
-        print("out channels:{}".format(out_channels))
-        print("width:{}".format(width))
-
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_channels, width, kernel_size=1, bias=False),
             nn.BatchNorm2d(width),

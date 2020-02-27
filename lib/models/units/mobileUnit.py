@@ -4,6 +4,7 @@ from .activation import build_activation
 from .utils import get_same_padding
 from .seUnit import SEModule
 
+
 class IdentityLayer(nn.Module):
 
     def __init__(self):

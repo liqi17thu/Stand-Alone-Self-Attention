@@ -44,10 +44,13 @@ class SAConv(nn.Module):
         k_out_h, k_out_w = k_out.split(self.out_channels // 2, dim=1)
         k_out = torch.cat((k_out_h + self.rel_h, k_out_w + self.rel_w), dim=1)
 
-        k_out = k_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride, -1)
-        v_out = v_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride, -1)
+        k_out = k_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride,
+                                        width // self.stride, -1)
+        v_out = v_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride,
+                                        width // self.stride, -1)
 
-        q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride, 1)
+        q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride,
+                           width // self.stride, 1)
 
         out = (q_out * k_out).sum(dim=2, keepdim=True) * np.sqrt((self.heads // self.out_channels))
         out = F.softmax(out, dim=-1)
@@ -66,6 +69,45 @@ class SAConv(nn.Module):
 
         init.normal_(self.rel_h, 0, 1)
         init.normal_(self.rel_w, 0, 1)
+
+
+class DynamicConv(nn.Module):
+    def __init__(self, channels, kernel_size, stride=1, padding=0, heads=1):
+        super(DynamicConv, self).__init__()
+        self.channels = channels
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
+        self.heads = heads
+
+        assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
+
+        self.filter = nn.Parameter(torch.randn(channels, kernel_size * kernel_size * heads), requires_grad=True)
+
+        self.reset_parameters()
+
+    def forward(self, x):
+        batch, channels, height, width = x.size()
+
+        stride_x = x[:, :, ::self.stride, ::self.stride]
+        filter = x.permute(0, 2, 3, 1).contiguous().view(batch * height // self.stride * width // self.stride, channels).mm(self.filter)
+        filter = filter.view(batch, height // self.stride, width // self.stride, self.kernel_size, self.kernel_size, self.heads)
+        filter = filter.unsqueeze(-1).repeat(1, 1, 1, 1, 1, 1, self.kernel_size // self.heads)
+        filter.view(batch, height // self.stride, width // self.stride, self.kernel_size, self.kernel_size, self.heads)
+        # filter shape: B, H/s, W/s, K, K, C
+
+        padded_x = F.pad(x, [self.padding, self.padding, self.padding, self.padding])
+        padded_x = padded_x.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
+        padded_x = padded_x.permute(0, 2, 3, 4, 5, 1).contiguous()
+        # padded_x shape: B, H/s, W/s, K, K, C
+
+        out = padded_x * filter.sum(3).sum(4)
+        out = out.permute(0, 3, 1, 2).contiguous()
+
+        return out
+
+    def reset_parameters(self):
+        init.normal_(self.filter, 0, 1)
 
 
 class SAPooling(nn.Module):
@@ -202,7 +244,7 @@ class SABottleneck(nn.Module):
 
         padding = get_same_padding(kernel_size)
         self.conv2 = nn.Sequential(
-            SAConv(width, width, kernel_size=self.kernel_size, stride=self.stride, padding=padding, heads=self.heads),
+            DynamicConv(width, kernel_size=self.kernel_size, stride=self.stride, padding=padding, heads=self.heads),
             nn.BatchNorm2d(width),
             nn.ReLU(),
         )
@@ -228,4 +270,3 @@ class SABottleneck(nn.Module):
         out = F.relu(out)
 
         return out
-

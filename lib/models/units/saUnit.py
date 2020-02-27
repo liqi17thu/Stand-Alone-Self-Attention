@@ -101,7 +101,7 @@ class DynamicConv(nn.Module):
         padded_x = padded_x.permute(0, 2, 3, 4, 5, 1).contiguous()
         # padded_x shape: B, H/s, W/s, K, K, C
 
-        out = padded_x * filter.sum(3).sum(4)
+        out = (padded_x * filter).sum(3).sum(4)
         out = out.permute(0, 3, 1, 2).contiguous()
 
         return out

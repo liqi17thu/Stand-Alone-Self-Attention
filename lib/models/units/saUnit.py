@@ -90,7 +90,7 @@ class DynamicConv(nn.Module):
         batch, channels, height, width = x.size()
 
         stride_x = x[:, :, ::self.stride, ::self.stride]
-        filter = x.permute(0, 2, 3, 1).contiguous().view(batch * height // self.stride * width // self.stride, channels).mm(self.filter)
+        filter = stride_x.permute(0, 2, 3, 1).contiguous().view(batch * height // self.stride * width // self.stride, channels).mm(self.filter)
         filter = filter.view(batch, height // self.stride, width // self.stride, self.kernel_size, self.kernel_size, self.heads)
         filter = filter.unsqueeze(-1).repeat(1, 1, 1, 1, 1, 1, self.kernel_size // self.heads)
         filter.view(batch, height // self.stride, width // self.stride, self.kernel_size, self.kernel_size, self.heads)

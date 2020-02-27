@@ -90,10 +90,10 @@ class DynamicConv(nn.Module):
         batch, channels, height, width = x.size()
 
         stride_x = x[:, :, ::self.stride, ::self.stride]
-        filter = stride_x.permute(0, 2, 3, 1).contiguous().view(batch * height // self.stride * width // self.stride, channels).mm(self.filter)
-        filter = filter.view(batch, height // self.stride, width // self.stride, self.kernel_size, self.kernel_size, self.heads)
-        filter = filter.unsqueeze(-1).repeat(1, 1, 1, 1, 1, 1, channels // self.heads)
-        filter.view(batch, height // self.stride, width // self.stride, self.kernel_size, self.kernel_size, channels)
+        sep_filter = stride_x.permute(0, 2, 3, 1).contiguous().view(batch * height // self.stride * width // self.stride, channels).mm(self.filter)
+        sep_filter = sep_filter.view(batch, height // self.stride, width // self.stride, self.kernel_size, self.kernel_size, self.heads)
+        sep_filter = sep_filter.unsqueeze(-1).repeat(1, 1, 1, 1, 1, 1, channels // self.heads)
+        sep_filter = sep_filter.view(batch, height // self.stride, width // self.stride, self.kernel_size, self.kernel_size, channels)
         # filter shape: B, H/s, W/s, K, K, C
 
         padded_x = F.pad(x, [self.padding, self.padding, self.padding, self.padding])
@@ -101,7 +101,7 @@ class DynamicConv(nn.Module):
         padded_x = padded_x.permute(0, 2, 3, 4, 5, 1).contiguous()
         # padded_x shape: B, H/s, W/s, K, K, C
 
-        out = (padded_x * filter).sum(3).sum(4)
+        out = (padded_x * sep_filter).sum(3).sum(4)
         out = out.permute(0, 3, 1, 2).contiguous()
 
         return out

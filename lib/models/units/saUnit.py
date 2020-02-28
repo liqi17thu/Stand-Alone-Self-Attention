@@ -5,7 +5,7 @@ import torch.nn.init as init
 
 import numpy as np
 
-from .utils import get_same_padding
+from .utils import get_same_padding, PositionalEncoding
 from .activation import Hswish
 
 
@@ -79,10 +79,12 @@ class SAFull(nn.Module):
 
         assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
+        self.encoding = PositionalEncoding(out_channels)
+
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=bias, groups=heads)
         self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=self.stride, padding=1, bias=bias)
+        # self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=self.stride, padding=1, bias=bias)
 
         self.reset_parameters()
 
@@ -92,6 +94,8 @@ class SAFull(nn.Module):
         q_out = self.query_conv(x)
         k_out = self.key_conv(x)
         v_out = self.value_conv(x)
+
+        k_out = self.encoding(k_out)
 
         q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride)
         q_out = q_out.permute(0, 1, 3, 4, 2).contiguous()
@@ -112,15 +116,16 @@ class SAFull(nn.Module):
         out = out.permute(0, 1, 4, 2, 3).contiguous()
         out = out.view(batch, -1, height // self.stride, width // self.stride)
 
-        conv_out = self.conv(x)
+        # conv_out = self.conv(x)
 
-        return out + conv_out
+        return out # + conv_out
 
     def reset_parameters(self):
         init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.query_conv.weight, mode='fan_out', nonlinearity='relu')
-        init.kaiming_normal_(self.conv.weight, mode='fan_out', nonlinearity='relu')
+        # init.kaiming_normal_(self.conv.weight, mode='fan_out', nonlinearity='relu')
+
 
 
 class SAPooling(nn.Module):
@@ -283,4 +288,3 @@ class SABottleneck(nn.Module):
         out = F.relu(out)
 
         return out
-

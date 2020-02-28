@@ -73,7 +73,7 @@ class SAConv(nn.Module):
 
 
 class SAFull(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, with_conv=False):
         super(SAFull, self).__init__()
         self.out_channels = out_channels
         self.kernel_size = kernel_size
@@ -88,6 +88,8 @@ class SAFull(nn.Module):
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=bias, groups=heads)
         self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
+        if with_conv:
+            self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=bias, stride=stride)
 
         self.reset_parameters()
 
@@ -122,12 +124,17 @@ class SAFull(nn.Module):
         out = out.permute(0, 1, 4, 2, 3).contiguous()
         out = out.view(batch, -1, height // self.stride, width // self.stride)
 
+        if self.with_conv:
+            out += self.conv(x)
+
         return out
 
     def reset_parameters(self):
         init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.query_conv.weight, mode='fan_out', nonlinearity='relu')
+        if self.with_conv:
+            init.kaiming_normal_(self.conv.weight, mode='fan_out', nonlinearity='relu')
 
 
 class SAPooling(nn.Module):

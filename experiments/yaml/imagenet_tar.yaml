@@ -2,7 +2,7 @@ TRAIN:
   EPOCH: 300
   MODEL:
     NAME: 'SAResNet50'
-    STEM: 'cifar_conv'
+    STEM: 'imagenet_conv'
 
   DATASET:
     NAME: 'imagenet_tar'

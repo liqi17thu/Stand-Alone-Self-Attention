@@ -73,26 +73,26 @@ class SAResNet(nn.Module):
         return out
 
 
-def SAResNet26(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_sablock=2, with_conv=False):
-    block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
+def SAResNet26(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False):
+    block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
     return SAResNet(block, [1, 2, 4, 1], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem, with_conv=with_conv)
 
 
-def SAResNet38(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_sablock=2, with_conv=False):
-    block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
+def SAResNet38(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False):
+    block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
     return SAResNet(block, [2, 3, 5, 2], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem, with_conv=with_conv)
 
 
-def SAResNet50(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_sablock=2, with_conv=False):
-    block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
+def SAResNet50(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False):
+    block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
     return SAResNet(block, [3, 4, 6, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem, with_conv=with_conv)
 
 
-def SAResNet101(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_sablock=2, with_conv=False):
-    block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
+def SAResNet101(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False):
+    block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
     return SAResNet(block, [3, 4, 23, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem, with_conv=with_conv)
 
 
-def SAResNet152(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_sablock=2, with_conv=False):
-    block = [Bottleneck for _ in range(4 - num_sablock)] + [SABottleneck for _ in range(num_sablock)]
+def SAResNet152(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False):
+    block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
     return SAResNet(block, [3, 4, 36, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem, with_conv=with_conv)

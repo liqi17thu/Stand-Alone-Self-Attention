@@ -35,7 +35,7 @@ def main(cfg):
                                        heads=cfg.TRAIN.MODEL.HEADS,
                                        kernel_size=cfg.TRAIN.MODEL.KERNEL,
                                        stem=cfg.TRAIN.MODEL.STEM,
-                                       num_sablock=cfg.TRAIN.MODEL.NUM_SABLOCK,
+                                       num_resblock=cfg.TRAIN.MODEL.NUM_RESBLOCK,
                                        with_conv=cfg.TRAIN.MODEL.WITH_CONV)
 
     if cfg.TRAIN.MODEL.PRE_TRAINED:

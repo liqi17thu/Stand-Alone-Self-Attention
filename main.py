@@ -7,6 +7,7 @@ import argparse
 import shutil
 
 from lib.data import *
+from lib.models.dynamicResnet import *
 from lib.models.saResnet import *
 from lib.core.train import train
 from lib.core.vaild import validate

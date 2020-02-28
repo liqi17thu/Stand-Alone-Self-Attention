@@ -21,15 +21,12 @@ class PositionalEncoding(nn.Module):
 
         pe = torch.zeros(d_model, max_len)
         position = torch.arange(0, max_len, dtype=torch.float)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)).unsqueeze(1)
         pe[0::2, :] = torch.sin(div_term * position)
         pe[1::2, :] = torch.cos(div_term * position)
-        pe.unsqueeze(0)
+        pe = pe.unsqueeze(0)
         self.register_buffer('pe', pe)
 
     def forward(self, x):
-        batch, channels, height, width = x.shape()
-        x = x.view(batch, channels, -1)
-        x = x + self.pe[0, :, :height * width]
-        x = x.view(batch, channels, height, width)
+        x = x + self.pe[0, :, :x.shape[2]]
         return self.dropout(x)

@@ -70,7 +70,7 @@ class SAConv(nn.Module):
 
 class SAFull(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False):
-        super(SAConv, self).__init__()
+        super(SAFull, self).__init__()
         self.out_channels = out_channels
         self.kernel_size = kernel_size
         self.stride = stride
@@ -95,7 +95,10 @@ class SAFull(nn.Module):
         k_out = self.key_conv(x)
         v_out = self.value_conv(x)
 
+        # relative embedding
+        k_out = k_out.view(batch, self.out_channels, -1)
         k_out = self.encoding(k_out)
+        k_out = k_out.view(batch, self.out_channels, height, width)
 
         q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride)
         q_out = q_out.permute(0, 1, 3, 4, 2).contiguous()

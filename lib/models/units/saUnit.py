@@ -62,7 +62,7 @@ class SAConv(nn.Module):
         init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.query_conv.weight, mode='fan_out', nonlinearity='relu')
-        init.kaiming_normal_(self.conv.weight, mode='fan_out', nonlinearity='relu')
+        # init.kaiming_normal_(self.conv.weight, mode='fan_out', nonlinearity='relu')
 
         init.normal_(self.rel_h, 0, 1)
         init.normal_(self.rel_w, 0, 1)

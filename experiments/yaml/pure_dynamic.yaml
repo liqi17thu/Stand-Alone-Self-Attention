@@ -1,0 +1,4 @@
+TRAIN:
+    MODEL:
+      NAME: 'DynamicResNet26'
+      NUM_SABLOCK: 4

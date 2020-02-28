@@ -1,3 +1,8 @@
+import torch
+import torch.nn as nn
+
+import math
+
 def get_same_padding(kernel_size):
     if isinstance(kernel_size, tuple):
         assert len(kernel_size) == 2, 'invalid kernel size: %s' % kernel_size

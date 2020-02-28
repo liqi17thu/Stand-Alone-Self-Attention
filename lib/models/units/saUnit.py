@@ -90,18 +90,18 @@ class SAPooling(nn.Module):
         v_out = self.value_conv(x)
         v_out = self.activation(v_out)
 
-        k_out = k_out.view(batch, self.heads, self.out_channels // self.heads, height, width)
+        k_out = k_out.view(batch, self.heads, self.channels // self.heads, height, width)
         k_out = k_out.permute(2, 0, 1, 3, 4).contiguous()
-        k_out = k_out.view(self.out_channels // self.heads, -1)
+        k_out = k_out.view(self.channels // self.heads, -1)
 
-        v_out = v_out.view(batch, self.heads, self.out_channels // self.heads, height, width)
+        v_out = v_out.view(batch, self.heads, self.channels // self.heads, height, width)
         v_out = v_out.permute(0, 1, 3, 4, 2).contiguous()
-        v_out = v_out.view(-1, self.out_channels // self.heads)
+        v_out = v_out.view(-1, self.channels // self.heads)
 
         q_out = self.query.repeat(batch, 1, 1)
         q_out = q_out.view(-1, self.channels // self.heads)
 
-        out = torch.mm(q_out, k_out) * np.sqrt((self.heads // self.out_channels))
+        out = torch.mm(q_out, k_out) * np.sqrt((self.heads // self.channels))
         out = F.softmax(out, dim=-1)
         out = torch.mm(out, v_out)
         out = out.view(batch, self.channels, 1, 1)

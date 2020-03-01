@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from .units.dynamicUnit import DynamicConv
+from .units.saUnit import  SAConv
 
 
 def conv_bn(inp, oup, stride, conv_layer=nn.Conv2d, norm_layer=nn.BatchNorm2d, nlin_layer=nn.ReLU):
@@ -97,7 +98,7 @@ class MobileBottleneck(nn.Module):
             norm_layer(exp),
             nlin_layer(inplace=True),
             # dw
-            DynamicConv(exp, exp, kernel, stride, padding),
+            SAConv(exp, exp, kernel, stride, padding, heads=8),
             norm_layer(exp),
             SELayer(exp),
             nlin_layer(inplace=True),

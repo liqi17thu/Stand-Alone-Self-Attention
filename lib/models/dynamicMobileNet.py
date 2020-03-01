@@ -97,7 +97,7 @@ class MobileBottleneck(nn.Module):
             norm_layer(exp),
             nlin_layer(inplace=True),
             # dw
-            DynamicConv(exp, exp, kernel, stride, padding),
+            DynamicConv(exp, kernel, stride, padding, exp),
             norm_layer(exp),
             SELayer(exp),
             nlin_layer(inplace=True),

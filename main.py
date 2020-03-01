@@ -19,6 +19,7 @@ from lib.utils import CrossEntropyLabelSmooth, get_scheduler
 parser = argparse.ArgumentParser('parameters')
 parser.add_argument('name', type=str)
 parser.add_argument('--cfg', type=str, default='./experiments/yaml/baseline.yaml')
+parser.add_argument('--kernel', type=int)
 
 def main(cfg):
     logger = get_logger(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'train.log'))
@@ -114,6 +115,8 @@ if __name__ == '__main__':
     cfg.SAVE_PATH = os.path.join(cfg.SAVE_PATH, 'train')
     if not os.path.isdir(cfg.SAVE_PATH):
         os.mkdir(cfg.SAVE_PATH)
+
+    cfg.TRAIN.MODEL.KERNEL = args.kernel
 
     cfg.JOB_NAME = args.name
     save_path = os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME)

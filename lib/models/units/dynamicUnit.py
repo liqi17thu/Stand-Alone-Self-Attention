@@ -14,6 +14,7 @@ class DynamicConv(nn.Module):
         self.stride = stride
         self.padding = padding
         self.heads = heads
+        self.with_conv = with_conv
 
         assert self.channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 

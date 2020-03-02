@@ -7,7 +7,7 @@ from .utils import get_same_padding
 
 
 class DynamicConv(nn.Module):
-    def __init__(self, channels, kernel_size, stride=1, padding=0, heads=1):
+    def __init__(self, channels, kernel_size, stride=1, padding=0, heads=1, bias=False, with_conv=False):
         super(DynamicConv, self).__init__()
         self.channels = channels
         self.kernel_size = kernel_size
@@ -18,6 +18,9 @@ class DynamicConv(nn.Module):
         assert self.channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
         self.filter = nn.Parameter(torch.randn(channels, kernel_size * kernel_size * heads), requires_grad=True)
+
+        if with_conv:
+            self.conv = nn.Conv2d(channels, channels, kernel_size=3, padding=1, bias=bias, stride=stride)
 
         self.reset_parameters()
 
@@ -39,9 +42,14 @@ class DynamicConv(nn.Module):
         out = (padded_x * sep_filter).sum(4).sum(3)
         out = out.permute(0, 3, 1, 2).contiguous()
 
+        if self.with_conv:
+            out += self.conv(x)
+
         return out
 
     def reset_parameters(self):
+        if self.with_conv:
+            init.kaiming_normal_(self.conv.weight, mode='fan_out', nonlinearity='relu')
         init.normal_(self.filter, 0, 1)
 
 

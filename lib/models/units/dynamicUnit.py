@@ -56,7 +56,7 @@ class DynamicConv(nn.Module):
 class DynamicBottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, in_channels, out_channels, stride=1, kernel_size=7, groups=1, base_width=64, heads=8):
+    def __init__(self, in_channels, out_channels, stride=1, kernel_size=7, groups=1, base_width=64, heads=8, with_conv=False):
         super(DynamicBottleneck, self).__init__()
         self.stride = stride
         self.heads = heads
@@ -72,7 +72,7 @@ class DynamicBottleneck(nn.Module):
 
         padding = get_same_padding(kernel_size)
         self.conv2 = nn.Sequential(
-            DynamicConv(width, kernel_size=self.kernel_size, stride=self.stride, padding=padding, heads=self.heads),
+            DynamicConv(width, kernel_size=self.kernel_size, stride=self.stride, padding=padding, heads=self.heads, with_conv=with_conv),
             nn.BatchNorm2d(width),
             nn.ReLU(),
         )

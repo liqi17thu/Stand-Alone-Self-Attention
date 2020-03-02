@@ -10,14 +10,13 @@ from .activation import Hswish
 
 
 class SAConv(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, with_conv=False):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False):
         super(SAConv, self).__init__()
         self.out_channels = out_channels
         self.kernel_size = kernel_size
         self.stride = stride
         self.padding = padding
         self.heads = heads
-        self.with_conv = with_conv
 
         assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
@@ -27,8 +26,6 @@ class SAConv(nn.Module):
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, stride=stride, groups=heads)
         self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
-        if with_conv:
-            self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=bias, stride=stride)
 
         self.reset_parameters()
 
@@ -56,24 +53,19 @@ class SAConv(nn.Module):
         out = (out * v_out).sum(dim=-1)
         out = out.view(batch, -1, height // self.stride, width // self.stride)
 
-        if self.with_conv:
-            out += self.conv(x)
-
         return out
 
     def reset_parameters(self):
         init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.query_conv.weight, mode='fan_out', nonlinearity='relu')
-        if self.with_conv:
-            init.kaiming_normal_(self.conv.weight, mode='fan_out', nonlinearity='relu')
 
         init.normal_(self.rel_h, 0, 1)
         init.normal_(self.rel_w, 0, 1)
 
 
 class SAFull(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, with_conv=False):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False):
         super(SAFull, self).__init__()
         self.out_channels = out_channels
         self.kernel_size = kernel_size
@@ -88,8 +80,6 @@ class SAFull(nn.Module):
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=bias, groups=heads)
         self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
-        if with_conv:
-            self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=bias, stride=stride)
 
         self.reset_parameters()
 
@@ -124,18 +114,12 @@ class SAFull(nn.Module):
         out = out.permute(0, 1, 4, 2, 3).contiguous()
         out = out.view(batch, -1, height // self.stride, width // self.stride)
 
-        if self.with_conv:
-            out += self.conv(x)
-
         return out
 
     def reset_parameters(self):
         init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.query_conv.weight, mode='fan_out', nonlinearity='relu')
-        if self.with_conv:
-            init.kaiming_normal_(self.conv.weight, mode='fan_out', nonlinearity='relu')
-
 
 class SAPooling(nn.Module):
     def __init__(self, channels, heads=1, bias=False):
@@ -270,11 +254,18 @@ class SABottleneck(nn.Module):
         )
 
         padding = get_same_padding(kernel_size)
-        self.conv2 = nn.Sequential(
-            SAConv(width, width, kernel_size=self.kernel_size, stride=self.stride, padding=padding, heads=self.heads, with_conv=with_conv),
+        self.conv_2_1 = nn.Sequential(
+            SAConv(width, width, kernel_size=self.kernel_size, stride=self.stride, padding=padding, heads=self.heads),
             nn.BatchNorm2d(width),
             nn.ReLU(),
         )
+
+        if with_conv:
+            self.conv_2_2 = nn.Sequential(
+                nn.Conv2d(width, width, kernel_size=3, stride=self.stride, padding=padding, bias=False),
+                nn.BatchNorm2d(width),
+                nn.ReLU(),
+            )
 
         self.conv3 = nn.Sequential(
             nn.Conv2d(width, self.expansion * out_channels, kernel_size=1, bias=False),
@@ -290,7 +281,14 @@ class SABottleneck(nn.Module):
 
     def forward(self, x):
         out = self.conv1(x)
-        out = self.conv2(out)
+
+        if self.with_conv:
+            out1 = self.conv_2_1(out)
+            out2 = self.conv_2_2(out)
+            out = out1 + out2
+        else:
+            out = self.conv_2_1(out)
+            
         out = self.conv3(out)
 
         out += self.shortcut(x)

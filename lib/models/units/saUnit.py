@@ -263,7 +263,7 @@ class SABottleneck(nn.Module):
 
         if with_conv:
             self.conv_2_2 = nn.Sequential(
-                nn.Conv2d(width, width, kernel_size=3, stride=self.stride, padding=padding, bias=False),
+                nn.Conv2d(width, width, kernel_size=3, stride=self.stride, padding=1, bias=False),
                 nn.BatchNorm2d(width),
                 nn.ReLU(),
             )

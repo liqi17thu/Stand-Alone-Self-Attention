@@ -244,6 +244,7 @@ class SABottleneck(nn.Module):
         self.stride = stride
         self.heads = heads
         self.kernel_size = kernel_size
+        self.with_conv = self.with_conv
 
         width = int(out_channels * (base_width / 64.)) * groups
 

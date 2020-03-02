@@ -283,12 +283,10 @@ class SABottleneck(nn.Module):
         out = self.conv1(x)
 
         if self.with_conv:
-            out1 = self.conv_2_1(out)
-            out2 = self.conv_2_2(out)
-            out = out1 + out2
+            out = self.conv_2_1(out) + self.conv_2_2(out)
         else:
             out = self.conv_2_1(out)
-            
+
         out = self.conv3(out)
 
         out += self.shortcut(x)

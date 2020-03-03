@@ -19,7 +19,7 @@ from lib.utils import CrossEntropyLabelSmooth, get_scheduler
 parser = argparse.ArgumentParser('parameters')
 parser.add_argument('name', type=str)
 parser.add_argument('--cfg', type=str, default='./experiments/yaml/baseline.yaml')
-parser.add_argument('--heads', type=int)
+parser.add_argument('--encoding', type=str)
 
 def main(cfg):
     logger = get_logger(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'train.log'))
@@ -117,8 +117,6 @@ if __name__ == '__main__':
     if not os.path.isdir(cfg.SAVE_PATH):
         os.mkdir(cfg.SAVE_PATH)
 
-    cfg.TRAIN.MODEL.HEADS = args.heads
-
     cfg.JOB_NAME = args.name
     save_path = os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME)
     if not os.path.exists(save_path):
@@ -136,4 +134,5 @@ if __name__ == '__main__':
         else:
             raise ValueError("Input Not Supported!")
 
+    cfg.TRAIN.MODEL.ENCODING = args.encoding
     main(cfg)

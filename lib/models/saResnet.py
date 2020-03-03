@@ -80,6 +80,7 @@ class SAResNet(nn.Module):
         for i in range(self.num_resblock, 4):
             for layer in self.layers[i]:
                 out = layer(out, self.r)
+
         out = self.avgpool(out)
         out = out.view(out.size(0), -1)
         out = self.dense(out)

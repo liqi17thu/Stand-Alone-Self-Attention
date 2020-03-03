@@ -12,7 +12,8 @@ from .postionalEncoding import PositionalEncoding, SinePositionalEncoding
 
 
 class SAConv(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, r_dim=256, encoding='learnable'):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, r_dim=256,
+                 encoding='learnable', args=None):
         super(SAConv, self).__init__()
         self.out_channels = out_channels
         self.kernel_size = kernel_size

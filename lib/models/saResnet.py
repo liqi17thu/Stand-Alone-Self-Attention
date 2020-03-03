@@ -7,7 +7,7 @@ from .units.resUnit import Bottleneck
 
 
 class SAResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding):
+    def __init__(self, block, num_blocks, num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding, args):
         super(SAResNet, self).__init__()
         self.in_places = 64
         self.heads = heads
@@ -15,6 +15,7 @@ class SAResNet(nn.Module):
         self.with_conv = with_conv
         self.num_resblock = num_resblock
         self.encoding = encoding
+        self.args = args
         self.r_dim = 256
 
         if stem.split('_')[1] == 'sa':
@@ -71,7 +72,7 @@ class SAResNet(nn.Module):
         for stride in strides:
             if block.__name__ == "SABottleneck":
                 layers.append(block(self.in_places, planes, stride, self.kernel_size, heads=self.heads, with_conv=self.with_conv,
-                                    r_dim=self.r_dim, encoding=self.encoding))
+                                    r_dim=self.r_dim, encoding=self.encoding, args=self.args))
             else:
                 layers.append(block(self.in_places, planes, stride))
             self.in_places = planes * block.expansion
@@ -92,30 +93,30 @@ class SAResNet(nn.Module):
 
 
 def SAResNet26(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
-               encoding='learnable'):
+               encoding='learnable', args=None):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [1, 2, 4, 1], num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding)
+    return SAResNet(block, [1, 2, 4, 1], num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding, args)
 
 
 def SAResNet38(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
-               encoding='learnable'):
+               encoding='learnable', args=None):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [2, 3, 5, 2], num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding)
+    return SAResNet(block, [2, 3, 5, 2], num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding, args)
 
 
 def SAResNet50(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
-               encoding='learnable'):
+               encoding='learnable', args=None):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [3, 4, 6, 3], num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding)
+    return SAResNet(block, [3, 4, 6, 3], num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding, args)
 
 
 def SAResNet101(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
-                encoding='learnable'):
+                encoding='learnable', args=None):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [3, 4, 23, 3], num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding)
+    return SAResNet(block, [3, 4, 23, 3], num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding, args)
 
 
 def SAResNet152(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
-                encoding='learnable'):
+                encoding='learnable', args=None):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [3, 4, 36, 3], num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding)
+    return SAResNet(block, [3, 4, 36, 3], num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding, args)

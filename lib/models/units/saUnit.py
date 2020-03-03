@@ -56,7 +56,7 @@ class SAConv(nn.Module):
             out = q_out * k_out + q_out * r_out + u * k_out + v * r_out
         else:
             out = q_out * k_out
-        out = out.sum(dim=2, keepdim=True) * np.sqrt((self.groups // self.out_channels))
+        out = out.sum(dim=2, keepdim=True) * np.sqrt(self.heads / self.out_channels)
         out = F.softmax(out, dim=-1)
         out = (out * v_out).sum(dim=-1)
         out = out.view(batch, -1, height // self.stride, width // self.stride)
@@ -67,9 +67,6 @@ class SAConv(nn.Module):
         init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.query_conv.weight, mode='fan_out', nonlinearity='relu')
-
-        init.normal_(self.rel_h, 0, 1)
-        init.normal_(self.rel_w, 0, 1)
 
 
 class SAFull(nn.Module):

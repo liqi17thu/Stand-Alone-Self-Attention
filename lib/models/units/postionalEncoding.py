@@ -76,6 +76,7 @@ class SinePositionalEncoding(nn.Module):
 class XLPositionalEncoding(nn.Module):
     def __init__(self, out_channels, heads, r_dim, bias=False):
         super(XLPositionalEncoding, self).__init__()
+        self.out_channels = out_channels
         self.heads = heads
 
         self.u = nn.Parameter(torch.randn(1, heads, out_channels // heads, 1, 1, 1), requires_grad=True)

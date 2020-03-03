@@ -36,7 +36,8 @@ def main(cfg):
                                        kernel_size=cfg.TRAIN.MODEL.KERNEL,
                                        stem=cfg.TRAIN.MODEL.STEM,
                                        num_resblock=cfg.TRAIN.MODEL.NUM_RESBLOCK,
-                                       with_conv=cfg.TRAIN.MODEL.WITH_CONV)
+                                       with_conv=cfg.TRAIN.MODEL.WITH_CONV,
+                                       encoding=cfg.TRAIN.MODEL.ENCODING)
 
     if cfg.TRAIN.MODEL.PRE_TRAINED:
         filename = 'best_model_' + str(cfg.TRAIN.DATASET.NAME) + '_' + \

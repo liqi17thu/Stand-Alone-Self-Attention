@@ -248,7 +248,8 @@ class SAStem(nn.Module):
 class SABottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, in_channels, out_channels, stride=1, kernel_size=7, groups=1, base_width=64, heads=8, with_conv=False, r_dim=256):
+    def __init__(self, in_channels, out_channels, stride, kernel_size, groups=1, base_width=64, heads=8,
+                 with_conv=False, r_dim=256, encoding='learnable'):
         super(SABottleneck, self).__init__()
         self.stride = stride
         self.heads = heads
@@ -264,7 +265,7 @@ class SABottleneck(nn.Module):
         )
 
         padding = get_same_padding(kernel_size)
-        self.sa_conv = SAConv(width, width, kernel_size=kernel_size, stride=stride, padding=padding, heads=heads, r_dim=r_dim)
+        self.sa_conv = SAConv(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, encoding=encoding)
         self.non_linear = nn.Sequential(
             nn.BatchNorm2d(width),
             nn.ReLU(),
@@ -289,7 +290,7 @@ class SABottleneck(nn.Module):
                 nn.BatchNorm2d(self.expansion * out_channels)
             )
 
-    def conv_2_1(self, out, r):
+    def conv_2_1(self, out, r=None):
         out = self.sa_conv(out, r)
         return self.non_linear(out)
 

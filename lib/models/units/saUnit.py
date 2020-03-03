@@ -80,7 +80,7 @@ class SAFull(nn.Module):
 
         assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
-        self.encoding = SinePositionalEncoding(out_channels)
+        self.encoder = SinePositionalEncoding(out_channels)
 
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=bias, groups=heads)
@@ -97,7 +97,7 @@ class SAFull(nn.Module):
 
         # relative embedding
         k_out = k_out.view(batch, self.out_channels, -1)
-        k_out = self.encoding(k_out)
+        k_out = self.encoder(k_out)
         k_out = k_out.view(batch, self.out_channels, height, width)
 
         q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride)

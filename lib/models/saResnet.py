@@ -62,7 +62,7 @@ class SAResNet(nn.Module):
         self.reset_parameters()
 
     def reset_parameters(self):
-        if self.encoding == 'xl':
+        if self.encoding == "xl":
             init.normal_(self.r, 0, 1)
 
     def _make_layer(self, block, planes, num_blocks, stride):

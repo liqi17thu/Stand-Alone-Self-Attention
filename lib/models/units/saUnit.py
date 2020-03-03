@@ -107,7 +107,7 @@ class SAFull(nn.Module):
         v_out = v_out.permute(0, 1, 3, 4, 2).contiguous()
         v_out = v_out.view(-1, self.out_channels // self.heads)
 
-        out = torch.mm(q_out, k_out) * np.sqrt((self.heads // self.out_channels))
+        out = torch.mm(q_out, k_out) * np.sqrt((self.heads / self.out_channels))
         out = F.softmax(out, dim=-1)
         out = torch.mm(out, v_out)
         out = out.view(batch, self.heads, height // self.stride, width // self.stride, self.out_channels // self.heads)
@@ -154,7 +154,7 @@ class SAPooling(nn.Module):
         q_out = self.query.repeat(batch, 1, 1)
         q_out = q_out.view(-1, self.channels // self.heads)
 
-        out = torch.mm(q_out, k_out) * np.sqrt((self.heads // self.channels))
+        out = torch.mm(q_out, k_out) * np.sqrt((self.heads / self.channels))
         out = F.softmax(out, dim=-1)
         out = torch.mm(out, v_out)
         out = out.view(batch, self.channels, 1, 1)

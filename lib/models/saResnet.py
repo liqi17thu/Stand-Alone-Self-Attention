@@ -1,16 +1,21 @@
+import torch
 import torch.nn as nn
+import torch.nn.init as init
 
 from .units.saUnit import SAStem, SABottleneck
 from .units.resUnit import Bottleneck
 
 
 class SAResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', with_conv=False):
+    def __init__(self, block, num_blocks, num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding):
         super(SAResNet, self).__init__()
         self.in_places = 64
         self.heads = heads
         self.kernel_size = kernel_size
         self.with_conv = with_conv
+        self.num_resblock = num_resblock
+        self.encoding = encoding
+        self.r_dim = 256
 
         if stem.split('_')[1] == 'sa':
             if stem.split('_')[0] == 'cifar':
@@ -45,16 +50,24 @@ class SAResNet(nn.Module):
         self.layer2 = self._make_layer(block[1], 128, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block[2], 256, num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block[3], 512, num_blocks[3], stride=2)
+        self.layers = nn.Sequential(self.layer1, self.layer2, self.layer3, self.layer4)
         self.dense = nn.Linear(512 * block[3].expansion, num_classes)
-
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+
+        self.r = nn.Parameter(torch.randn(1, self.r_dim, self.kernel_size, self.kernel_size), requires_grad=True)
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        init.normal_(self.r, 0, 1)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
         for stride in strides:
             if block.__name__ == "SABottleneck":
-                layers.append(block(self.in_places, planes, stride, kernel_size=self.kernel_size, heads=self.heads, with_conv=self.with_conv))
+                layers.append(block(self.in_places, planes, stride, self.kernel_size, heads=self.heads, with_conv=self.with_conv,
+                                    r_dim=self.r_dim, encoding=self.encoding))
             else:
                 layers.append(block(self.in_places, planes, stride))
             self.in_places = planes * block.expansion
@@ -62,10 +75,11 @@ class SAResNet(nn.Module):
 
     def forward(self, x):
         out = self.init(x)
-        out = self.layer1(out)
-        out = self.layer2(out)
-        out = self.layer3(out)
-        out = self.layer4(out)
+        for i in range(self.num_resblock):
+            out = self.layers[i](out)
+        for i in range(self.num_resblock, 4):
+            for layer in self.layers[i]:
+                out = layer(out, self.r)
         out = self.avgpool(out)
         out = out.view(out.size(0), -1)
         out = self.dense(out)
@@ -73,26 +87,31 @@ class SAResNet(nn.Module):
         return out
 
 
-def SAResNet26(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False):
+def SAResNet26(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
+               encoding='learnable'):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [1, 2, 4, 1], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem, with_conv=with_conv)
+    return SAResNet(block, [1, 2, 4, 1], num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding)
 
 
-def SAResNet38(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False):
+def SAResNet38(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
+               encoding='learnable'):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [2, 3, 5, 2], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem, with_conv=with_conv)
+    return SAResNet(block, [2, 3, 5, 2], num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding)
 
 
-def SAResNet50(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False):
+def SAResNet50(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
+               encoding='learnable'):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [3, 4, 6, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem, with_conv=with_conv)
+    return SAResNet(block, [3, 4, 6, 3], num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding)
 
 
-def SAResNet101(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False):
+def SAResNet101(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
+                encoding='learnable'):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [3, 4, 23, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem, with_conv=with_conv)
+    return SAResNet(block, [3, 4, 23, 3], num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding)
 
 
-def SAResNet152(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False):
+def SAResNet152(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
+                encoding='learnable'):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [3, 4, 36, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem, with_conv=with_conv)
+    return SAResNet(block, [3, 4, 36, 3], num_classes, heads, kernel_size, stem, num_resblock, with_conv, encoding)

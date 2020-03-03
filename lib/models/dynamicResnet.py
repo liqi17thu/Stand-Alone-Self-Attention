@@ -55,7 +55,7 @@ class DynamicResNet(nn.Module):
         layers = []
         for stride in strides:
             if block.__name__ == "DynamicBottleneck":
-                layers.append(block(self.in_places, planes, stride, kernel_size=self.kernel_size, heads=self.heads))
+                layers.append(block(self.in_places, planes, stride, kernel_size=self.kernel_size, heads=self.heads, with_conv=self.with_conv))
             else:
                 layers.append(block(self.in_places, planes, stride))
             self.in_places = planes * block.expansion
@@ -76,24 +76,24 @@ class DynamicResNet(nn.Module):
 
 def DynamicResNet26(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False):
     block = [Bottleneck for _ in range(num_resblock)] + [DynamicBottleneck for _ in range(4 - num_resblock)]
-    return DynamicResNet(block, [1, 2, 4, 1], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem)
+    return DynamicResNet(block, [1, 2, 4, 1], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem, with_conv=with_conv)
 
 
 def DynamicResNet38(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False):
     block = [Bottleneck for _ in range(num_resblock)] + [DynamicBottleneck for _ in range(4 - num_resblock)]
-    return DynamicResNet(block, [2, 3, 5, 2], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem)
+    return DynamicResNet(block, [2, 3, 5, 2], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem, with_conv=with_conv)
 
 
 def DynamicResNet50(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False):
     block = [Bottleneck for _ in range(num_resblock)] + [DynamicBottleneck for _ in range(4 - num_resblock)]
-    return DynamicResNet(block, [3, 4, 6, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem)
+    return DynamicResNet(block, [3, 4, 6, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem, with_conv=with_conv)
 
 
 def DynamicResNet101(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False):
     block = [Bottleneck for _ in range(num_resblock)] + [DynamicBottleneck for _ in range(4 - num_resblock)]
-    return DynamicResNet(block, [3, 4, 23, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem)
+    return DynamicResNet(block, [3, 4, 23, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem, with_conv=with_conv)
 
 
 def DynamicResNet152(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False):
     block = [Bottleneck for _ in range(num_resblock)] + [DynamicBottleneck for _ in range(4 - num_resblock)]
-    return DynamicResNet(block, [3, 4, 36, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem)
+    return DynamicResNet(block, [3, 4, 36, 3], num_classes=num_classes, heads=heads, kernel_size=kernel_size, stem=stem, with_conv=with_conv)

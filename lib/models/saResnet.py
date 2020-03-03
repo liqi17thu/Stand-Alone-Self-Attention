@@ -56,6 +56,8 @@ class SAResNet(nn.Module):
 
         if encoding == "xl":
             self.r = nn.Parameter(torch.randn(1, self.r_dim, self.kernel_size, self.kernel_size), requires_grad=True)
+        else:
+            self.r = None
 
         self.reset_parameters()
 

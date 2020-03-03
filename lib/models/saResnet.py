@@ -54,7 +54,8 @@ class SAResNet(nn.Module):
         self.dense = nn.Linear(512 * block[3].expansion, num_classes)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-        self.r = nn.Parameter(torch.randn(1, self.r_dim, self.kernel_size, self.kernel_size), requires_grad=True)
+        if encoding == "xl":
+            self.r = nn.Parameter(torch.randn(1, self.r_dim, self.kernel_size, self.kernel_size), requires_grad=True)
 
         self.reset_parameters()
 

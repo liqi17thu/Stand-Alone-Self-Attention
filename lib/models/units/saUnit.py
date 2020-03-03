@@ -23,7 +23,7 @@ class SAConv(nn.Module):
 
         assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
-        self.encoding = PositionalEncoding(out_channels, kernel_size, heads, bias, encoding, r_dim)
+        self.encoder = PositionalEncoding(out_channels, kernel_size, heads, bias, encoding, r_dim)
 
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, stride=stride, groups=heads)
@@ -44,9 +44,9 @@ class SAConv(nn.Module):
 
         # positonal encoding
         if self.encoding == 'xl':
-            k_out, r_out, u, v = self.encoding(k_out, r)
+            k_out, r_out, u, v = self.encoder(k_out, r)
         else:
-            k_out = self.encoding(k_out)
+            k_out = self.encoder(k_out)
 
         k_out = k_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride, -1)
         v_out = v_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride, -1)
@@ -287,7 +287,7 @@ class SABottleneck(nn.Module):
                 nn.BatchNorm2d(self.expansion * out_channels)
             )
 
-    def conv_2_1(self, out, r=None):
+    def conv_2_1(self, out, r):
         out = self.sa_conv(out, r)
         return self.non_linear(out)
 

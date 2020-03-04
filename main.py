@@ -21,7 +21,8 @@ parser.add_argument('name', type=str)
 parser.add_argument('--cfg', type=str, default='./experiments/yaml/baseline.yaml')
 parser.add_argument('--encoding', type=str)
 
-def main(cfg):
+
+def main(cfg, args):
     logger = get_logger(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'train.log'))
     writer = SummaryWriter(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'runs'))
 
@@ -38,7 +39,9 @@ def main(cfg):
                                        stem=cfg.TRAIN.MODEL.STEM,
                                        num_resblock=cfg.TRAIN.MODEL.NUM_RESBLOCK,
                                        with_conv=cfg.TRAIN.MODEL.WITH_CONV,
-                                       encoding=cfg.TRAIN.MODEL.ENCODING)
+                                       encoding=cfg.TRAIN.MODEL.ENCODING,
+                                       temperture=cfg.TRAIN.MODEL.TEMPERTURE,
+                                       args=args)
 
     if cfg.TRAIN.MODEL.PRE_TRAINED:
         filename = 'best_model_' + str(cfg.TRAIN.DATASET.NAME) + '_' + \
@@ -135,4 +138,4 @@ if __name__ == '__main__':
             raise ValueError("Input Not Supported!")
 
     cfg.TRAIN.MODEL.ENCODING = args.encoding
-    main(cfg)
+    main(cfg, args)

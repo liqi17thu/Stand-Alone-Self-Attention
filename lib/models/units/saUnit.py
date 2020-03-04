@@ -12,7 +12,8 @@ from .postionalEncoding import PositionalEncoding, SinePositionalEncoding
 
 
 class SAConv(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, r_dim=256, encoding='learnable'):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, r_dim=256,
+                 encoding='learnable', temperture=1.0, args=None):
         super(SAConv, self).__init__()
         self.out_channels = out_channels
         self.kernel_size = kernel_size
@@ -20,10 +21,12 @@ class SAConv(nn.Module):
         self.padding = padding
         self.heads = heads
         self.encoding = encoding
+        self.temperture = temperture
 
         assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
-        self.encoder = PositionalEncoding(out_channels, kernel_size, heads, bias, encoding, r_dim)
+        if encoding != 'none':
+            self.encoder = PositionalEncoding(out_channels, kernel_size, heads, bias, encoding, r_dim)
 
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, stride=stride, groups=heads)
@@ -45,6 +48,8 @@ class SAConv(nn.Module):
         # positonal encoding
         if self.encoding == 'xl':
             k_out, r_out, u, v = self.encoder(k_out, r)
+        elif self.encoding == 'none':
+            pass
         else:
             k_out = self.encoder(k_out)
 
@@ -56,7 +61,7 @@ class SAConv(nn.Module):
             out = q_out * k_out + q_out * r_out + u * k_out + v * r_out
         else:
             out = q_out * k_out
-        out = out.sum(dim=2, keepdim=True) * np.sqrt(self.heads / self.out_channels)
+        out = out.sum(dim=2, keepdim=True) * self.temperture
         out = F.softmax(out, dim=-1)
         out = (out * v_out).sum(dim=-1)
         out = out.view(batch, -1, height // self.stride, width // self.stride)
@@ -246,7 +251,7 @@ class SABottleneck(nn.Module):
     expansion = 4
 
     def __init__(self, in_channels, out_channels, stride, kernel_size, groups=1, base_width=64, heads=8,
-                 with_conv=False, r_dim=256, encoding='learnable'):
+                 with_conv=False, r_dim=256, encoding='learnable', temperture=1.0, args=None):
         super(SABottleneck, self).__init__()
         self.stride = stride
         self.heads = heads
@@ -262,7 +267,8 @@ class SABottleneck(nn.Module):
         )
 
         padding = get_same_padding(kernel_size)
-        self.sa_conv = SAConv(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, encoding=encoding)
+        self.sa_conv = SAConv(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, encoding=encoding,
+                              temperture=temperture, args=args)
         self.non_linear = nn.Sequential(
             nn.BatchNorm2d(width),
             nn.ReLU(),

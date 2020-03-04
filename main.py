@@ -39,6 +39,7 @@ def main(cfg, args):
                                        num_resblock=cfg.TRAIN.MODEL.NUM_RESBLOCK,
                                        with_conv=cfg.TRAIN.MODEL.WITH_CONV,
                                        encoding=cfg.TRAIN.MODEL.ENCODING,
+                                       temperture=cfg.TRIN.MODEL.TEMPERTURE,
                                        args=args)
 
     if cfg.TRAIN.MODEL.PRE_TRAINED:

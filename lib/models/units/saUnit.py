@@ -3,8 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
 
-import numpy as np
-
 
 from .utils import get_same_padding
 from .activation import Hswish

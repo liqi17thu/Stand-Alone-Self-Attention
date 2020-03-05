@@ -14,6 +14,7 @@ __C.SAVE_PATH = './experiments'
 __C.CUDA = True
 __C.DISTRIBUTED = True
 __C.GPUS = 8
+__C.TEST = False
 
 __C.TRAIN = CN()
 

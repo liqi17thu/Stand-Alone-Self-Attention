@@ -75,6 +75,10 @@ def main(cfg, args):
 
     logger.info("Number of model parameters: {0:.2f}M".format(get_model_parameters(model)/1000000))
 
+    if cfg.TEST:
+        _ = validate(model, test_loader, criterion, 0, cfg, logger, writer)
+        return
+
     for epoch in range(start_epoch, cfg.TRAIN.EPOCH + 1):
         train(model, train_loader, optimizer, criterion, scheduler, epoch, cfg, logger, writer)
         eval_acc = validate(model, test_loader, criterion, epoch, cfg, logger, writer)

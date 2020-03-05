@@ -22,7 +22,10 @@ parser.add_argument('--cfg', type=str, default='./experiments/yaml/baseline.yaml
 
 
 def main(cfg, args):
-    logger = get_logger(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'train.log'))
+    if cfg.TEST:
+        logger = get_logger(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'test.log'))
+    else:
+        logger = get_logger(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'train.log'))
     writer = SummaryWriter(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'runs'))
 
     train_loader, test_loader, num_classes = eval(cfg.TRAIN.DATASET.NAME)(cfg)

@@ -12,7 +12,7 @@ from lib.models.saResnet import *
 from lib.core.train import train
 from lib.core.vaild import validate
 from lib.config import cfg
-from lib.utils import save_checkpoint, get_model_parameters, get_logger
+from lib.utils import save_checkpoint, get_model_parameters, get_logger, get_attention_logger
 from lib.utils import CrossEntropyLabelSmooth, get_scheduler
 
 
@@ -26,6 +26,7 @@ def main(cfg):
         logger = get_logger(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'test.log'))
     else:
         logger = get_logger(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'train.log'))
+    attention_logger = get_attention_logger(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'attention.log'))
     writer = SummaryWriter(os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME, 'runs'))
 
     train_loader, test_loader, num_classes = eval(cfg.TRAIN.DATASET.NAME)(cfg)
@@ -43,6 +44,7 @@ def main(cfg):
                                        with_conv=cfg.TRAIN.MODEL.WITH_CONV,
                                        encoding=cfg.TRAIN.MODEL.ENCODING,
                                        temperture=cfg.TRAIN.MODEL.TEMPERTURE,
+                                       attention_logger=attention_logger,
                                        cfg=cfg)
 
     if cfg.TRAIN.MODEL.PRE_TRAINED:

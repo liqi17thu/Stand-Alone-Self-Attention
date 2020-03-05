@@ -13,7 +13,7 @@ from .postionalEncoding import PositionalEncoding, SinePositionalEncoding
 
 class SAConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, r_dim=256,
-                 encoding='learnable', temperture=1.0, cfg=None):
+                 encoding='learnable', temperture=1.0, logger=None, cfg=None):
         super(SAConv, self).__init__()
         self.out_channels = out_channels
         self.kernel_size = kernel_size
@@ -22,6 +22,8 @@ class SAConv(nn.Module):
         self.heads = heads
         self.encoding = encoding
         self.temperture = temperture
+        self.logger = logger
+        self.cfg = cfg
 
         assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
@@ -63,6 +65,18 @@ class SAConv(nn.Module):
             out = q_out * k_out
         out = out.sum(dim=2, keepdim=True) * self.temperture
         out = F.softmax(out, dim=-1)
+
+        # print attention info
+        if not self.training and x.get_device() == 1 and self.cfg.DISP_ATTENTION:
+            for head in range(self.heads):
+                self.logger.info("head {}".format(head))
+                for h in range(height // self.stride):
+                    for w in range(width // self.stride):
+                        self.logger.info("height {} width {}".format(h, w))
+                        for k in range(self.kernel_size):
+                            loggerInfo = "{:.3f} " * self.kernel_size
+                            self.logger.info(loggerInfo.format(*out[0][head][0][h][w][k*self.kernel_size:(k+1)*self.kernel_size].tolist()))
+
         out = (out * v_out).sum(dim=-1)
         out = out.view(batch, -1, height // self.stride, width // self.stride)
 
@@ -117,7 +131,7 @@ class SAFull(nn.Module):
         v_out = v_out.permute(0, 1, 3, 4, 2).contiguous()
         v_out = v_out.view(-1, self.out_channels // self.heads)
 
-        out = torch.mm(q_out, k_out) * np.sqrt(self.heads / self.out_channels)
+        out = torch.mm(q_out, k_out)
         out = F.softmax(out, dim=-1)
         out = torch.mm(out, v_out)
         out = out.view(batch, self.heads, height // self.stride, width // self.stride, self.out_channels // self.heads)
@@ -165,7 +179,7 @@ class SAPooling(nn.Module):
         q_out = self.query.repeat(batch, 1, 1)
         q_out = q_out.view(-1, self.channels // self.heads)
 
-        out = torch.mm(q_out, k_out) * np.sqrt(self.heads / self.channels)
+        out = torch.mm(q_out, k_out)
         out = F.softmax(out, dim=-1)
         out = torch.mm(out, v_out)
         out = out.view(batch, self.channels, 1, 1)
@@ -251,7 +265,7 @@ class SABottleneck(nn.Module):
     expansion = 4
 
     def __init__(self, in_channels, out_channels, stride, kernel_size, groups=1, base_width=64, heads=8,
-                 with_conv=False, r_dim=256, encoding='learnable', temperture=1.0, cfg=None):
+                 with_conv=False, r_dim=256, encoding='learnable', temperture=1.0, logger=None, cfg=None):
         super(SABottleneck, self).__init__()
         self.stride = stride
         self.heads = heads
@@ -269,7 +283,7 @@ class SABottleneck(nn.Module):
 
         padding = get_same_padding(kernel_size)
         self.sa_conv = SAConv(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, encoding=encoding,
-                              temperture=temperture, cfg=cfg)
+                              temperture=temperture, logger=logger, cfg=cfg)
         self.non_linear = nn.Sequential(
             nn.BatchNorm2d(width),
             nn.ReLU(),

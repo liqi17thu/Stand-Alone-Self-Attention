@@ -94,7 +94,6 @@ def make_divisible(v, divisor, min_val=None):
     return new_v
 
 
-# DEBUG < INFO < WARNING < ERROR < CRITICAL
 def get_logger(file_path):
     """ Make python logger """
     logger = logging.getLogger()
@@ -107,6 +106,19 @@ def get_logger(file_path):
 
     logger.addHandler(file_handler)
     logger.addHandler(stream_handler)
+    logger.setLevel(logging.INFO)
+
+    return logger
+
+def get_attention_logger(file_path):
+    """ Make python logger """
+    logger = logging.getLogger()
+    log_format = '%(message)s'
+    formatter = logging.Formatter(log_format)
+    file_handler = logging.FileHandler(file_path)
+    file_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
     logger.setLevel(logging.INFO)
 
     return logger

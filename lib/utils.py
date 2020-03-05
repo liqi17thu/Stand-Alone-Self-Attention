@@ -96,7 +96,7 @@ def make_divisible(v, divisor, min_val=None):
 
 def get_logger(file_path):
     """ Make python logger """
-    logger = logging.getLogger()
+    logger = logging.getLogger("train")
     log_format = '%(asctime)s | %(message)s'
     formatter = logging.Formatter(log_format, datefmt='%m/%d %I:%M:%S %p')
     file_handler = logging.FileHandler(file_path)
@@ -112,7 +112,7 @@ def get_logger(file_path):
 
 def get_attention_logger(file_path):
     """ Make python logger """
-    logger = logging.getLogger()
+    logger = logging.getLogger("attention")
     log_format = '%(message)s'
     formatter = logging.Formatter(log_format)
     file_handler = logging.FileHandler(file_path)

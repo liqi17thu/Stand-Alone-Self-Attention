@@ -13,7 +13,7 @@ from .postionalEncoding import PositionalEncoding, SinePositionalEncoding
 
 class SAConv(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, r_dim=256,
-                 encoding='learnable', temperture=1.0, args=None):
+                 encoding='learnable', temperture=1.0, cfg=None):
         super(SAConv, self).__init__()
         self.out_channels = out_channels
         self.kernel_size = kernel_size
@@ -251,12 +251,13 @@ class SABottleneck(nn.Module):
     expansion = 4
 
     def __init__(self, in_channels, out_channels, stride, kernel_size, groups=1, base_width=64, heads=8,
-                 with_conv=False, r_dim=256, encoding='learnable', temperture=1.0, args=None):
+                 with_conv=False, r_dim=256, encoding='learnable', temperture=1.0, cfg=None):
         super(SABottleneck, self).__init__()
         self.stride = stride
         self.heads = heads
         self.kernel_size = kernel_size
         self.with_conv = with_conv
+        self.cfg = cfg
 
         width = int(out_channels * (base_width / 64.)) * groups
 
@@ -268,7 +269,7 @@ class SABottleneck(nn.Module):
 
         padding = get_same_padding(kernel_size)
         self.sa_conv = SAConv(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, encoding=encoding,
-                              temperture=temperture, args=args)
+                              temperture=temperture, cfg=cfg)
         self.non_linear = nn.Sequential(
             nn.BatchNorm2d(width),
             nn.ReLU(),

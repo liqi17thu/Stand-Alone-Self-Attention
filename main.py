@@ -81,12 +81,12 @@ def main(cfg):
     logger.info("Number of model parameters: {0:.2f}M".format(get_model_parameters(model)/1000000))
 
     if cfg.TEST:
-        _ = validate(model, test_loader, criterion, 0, cfg, logger, writer)
+        _ = validate(model, test_loader, criterion, start_epoch, cfg, logger, attention_logger, writer)
         return
 
     for epoch in range(start_epoch, cfg.TRAIN.EPOCH + 1):
         train(model, train_loader, optimizer, criterion, scheduler, epoch, cfg, logger, writer)
-        eval_acc = validate(model, test_loader, criterion, epoch, cfg, logger, writer)
+        eval_acc = validate(model, test_loader, criterion, epoch, cfg, logger, attention_logger, writer)
 
         is_best = eval_acc > best_acc
         best_acc = max(eval_acc, best_acc)
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     save_path = os.path.join(cfg.SAVE_PATH, cfg.JOB_NAME)
     if not os.path.exists(save_path):
         os.mkdir(save_path)
-    else:
+    elif not cfg.TEST:
         key = input('Delete Existing Directory [y/n]: ')
         if key == 'n':
             if cfg.AUTO_RESUME:

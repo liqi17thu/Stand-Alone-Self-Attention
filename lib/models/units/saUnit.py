@@ -49,7 +49,7 @@ class SAConv(nn.Module):
 
         q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride, 1)
 
-        out = (q_out * k_out).sum(dim=2, keepdim=True) * np.sqrt(self.heads / self.out_channels)
+        out = (q_out * k_out).sum(dim=2, keepdim=True)
         out = F.softmax(out, dim=-1)
         out = (out * v_out).sum(dim=-1)
         out = out.view(batch, -1, height // self.stride, width // self.stride)

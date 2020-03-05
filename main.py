@@ -19,7 +19,6 @@ from lib.utils import CrossEntropyLabelSmooth, get_scheduler
 parser = argparse.ArgumentParser('parameters')
 parser.add_argument('name', type=str)
 parser.add_argument('--cfg', type=str, default='./experiments/yaml/baseline.yaml')
-parser.add_argument('--encoding', type=str)
 
 
 def main(cfg, args):
@@ -137,5 +136,4 @@ if __name__ == '__main__':
         else:
             raise ValueError("Input Not Supported!")
 
-    cfg.TRAIN.MODEL.ENCODING = args.encoding
     main(cfg, args)

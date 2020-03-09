@@ -115,27 +115,27 @@ class SAFull(nn.Module):
         k_out = self.key_conv(x)
         v_out = self.value_conv(x)
 
-        # relative embedding
+        # positional embedding
         k_out = k_out.view(batch, self.out_channels, -1)
         k_out = self.encoder(k_out)
         k_out = k_out.view(batch, self.out_channels, height, width)
 
         q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride)
         q_out = q_out.permute(0, 1, 3, 4, 2).contiguous()
-        q_out = q_out.view(-1, self.out_channels // self.heads)
+        q_out = q_out.view(batch, -1, self.out_channels // self.heads)
 
         k_out = k_out.view(batch, self.heads, self.out_channels // self.heads, height, width)
-        k_out = k_out.permute(2, 0, 1, 3, 4).contiguous()
-        k_out = k_out.view(self.out_channels // self.heads, -1)
+        k_out = k_out.permute(0, 2, 1, 3, 4).contiguous()
+        k_out = k_out.view(batch, self.out_channels // self.heads, -1)
 
         v_out = v_out.view(batch, self.heads, self.out_channels // self.heads, height, width)
         v_out = v_out.permute(0, 1, 3, 4, 2).contiguous()
-        v_out = v_out.view(-1, self.out_channels // self.heads)
+        v_out = v_out.view(batch, -1, self.out_channels // self.heads)
 
-        out = torch.mm(q_out, k_out)
+        out = torch.bmm(q_out, k_out)
         out = F.softmax(out, dim=-1)
 
-        out = torch.mm(out, v_out)
+        out = torch.bmm(out, v_out)
         out = out.view(batch, self.heads, height // self.stride, width // self.stride, self.out_channels // self.heads)
         out = out.permute(0, 1, 4, 2, 3).contiguous()
         out = out.view(batch, -1, height // self.stride, width // self.stride)
@@ -160,20 +160,23 @@ class SAPooling(nn.Module):
         assert self.channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
         self.query = nn.Parameter(torch.randn(1, heads, channels // heads), requires_grad=True)
-        self.key_conv = nn.Conv2d(channels, channels, kernel_size=1, bias=bias, groups=heads)
-        self.value_conv = nn.Conv2d(channels, channels, kernel_size=1, bias=bias, groups=heads)
+        # self.key_conv = nn.Conv2d(channels, channels, kernel_size=1, bias=bias, groups=heads)
+        # self.value_conv = nn.Conv2d(channels, channels, kernel_size=1, bias=bias, groups=heads)
 
         self.reset_parameters()
 
     def forward(self, x):
         batch, channels, height, width = x.size()
 
-        k_out = self.key_conv(x)
-        v_out = self.value_conv(x)
+        # k_out = self.key_conv(x)
+        # v_out = self.value_conv(x)
+        k_out = x
+        v_out = x
 
         k_out = k_out.view(batch, self.heads, self.channels // self.heads, -1)
         v_out = v_out.view(batch, self.heads, self.channels // self.heads, -1)
         q_out = self.query.repeat(batch, 1, 1)
+        q_out = q_out.view(batch, self.heads, self.channels // self.heads, 1)
 
         out = (q_out * k_out).sum(dim=2, keepdim=True) * self.temperture
         out = F.softmax(out, dim=-1)
@@ -184,7 +187,7 @@ class SAPooling(nn.Module):
             for head in range(self.heads):
                 self.logger.info("head {}".format(head))
                 for h in range(height):
-                    loggerInfo = "{:.3f} " * self.width
+                    loggerInfo = "{:.3f} " * width
                     self.logger.info(loggerInfo.format(*out[0][head][0][h*width:(h+1)*width].tolist()))
 
         out = (out * v_out).sum(dim=-1)
@@ -193,8 +196,8 @@ class SAPooling(nn.Module):
         return out
 
     def reset_parameters(self):
-        init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
-        init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
+        # init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
+        # init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
 
         init.normal_(self.query, 0, 1)
 

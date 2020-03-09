@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 
-from .units.saUnit import SAStem, SABottleneck
+from .units.saUnit import SAStem, SABottleneck, SAPooling
 from .units.resUnit import Bottleneck
 
 
@@ -56,7 +56,7 @@ class SAResNet(nn.Module):
         self.layer4 = self._make_layer(block[3], 512, num_blocks[3], stride=2)
         self.layers = nn.Sequential(self.layer1, self.layer2, self.layer3, self.layer4)
         self.dense = nn.Linear(512 * block[3].expansion, num_classes)
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.avgpool = SAPooling(512 * block[3].expansion, logger=self.logger, cfg=self.cfg)
 
         if encoding == "xl":
             self.r = nn.Parameter(torch.randn(1, self.r_dim, self.kernel_size, self.kernel_size), requires_grad=True)

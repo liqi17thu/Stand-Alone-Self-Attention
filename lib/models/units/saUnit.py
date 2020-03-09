@@ -87,13 +87,16 @@ class SAConv(nn.Module):
 
 
 class SAFull(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False,
+                 logger=None, cfg=None):
         super(SAFull, self).__init__()
         self.out_channels = out_channels
         self.kernel_size = kernel_size
         self.stride = stride
         self.padding = padding
         self.heads = heads
+        self.logger = logger
+        self.cfg = cfg
 
         assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
@@ -131,6 +134,7 @@ class SAFull(nn.Module):
 
         out = torch.mm(q_out, k_out)
         out = F.softmax(out, dim=-1)
+
         out = torch.mm(out, v_out)
         out = out.view(batch, self.heads, height // self.stride, width // self.stride, self.out_channels // self.heads)
         out = out.permute(0, 1, 4, 2, 3).contiguous()
@@ -145,17 +149,19 @@ class SAFull(nn.Module):
 
 
 class SAPooling(nn.Module):
-    def __init__(self, channels, heads=1, bias=False):
+    def __init__(self, channels, heads=1, bias=False, logger=None, cfg=None, temperture=1.0):
         super(SAPooling, self).__init__()
         self.channels = channels
         self.heads = heads
+        self.logger = logger
+        self.cfg = cfg
+        self.temperture = temperture
 
         assert self.channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
         self.query = nn.Parameter(torch.randn(1, heads, channels // heads), requires_grad=True)
         self.key_conv = nn.Conv2d(channels, channels, kernel_size=1, bias=bias, groups=heads)
         self.value_conv = nn.Conv2d(channels, channels, kernel_size=1, bias=bias, groups=heads)
-        self.activation = Hswish()
 
         self.reset_parameters()
 
@@ -164,22 +170,24 @@ class SAPooling(nn.Module):
 
         k_out = self.key_conv(x)
         v_out = self.value_conv(x)
-        v_out = self.activation(v_out)
 
-        k_out = k_out.view(batch, self.heads, self.channels // self.heads, height, width)
-        k_out = k_out.permute(2, 0, 1, 3, 4).contiguous()
-        k_out = k_out.view(self.channels // self.heads, -1)
-
-        v_out = v_out.view(batch, self.heads, self.channels // self.heads, height, width)
-        v_out = v_out.permute(0, 1, 3, 4, 2).contiguous()
-        v_out = v_out.view(-1, self.channels // self.heads)
-
+        k_out = k_out.view(batch, self.heads, self.channels // self.heads, -1)
+        v_out = v_out.view(batch, self.heads, self.channels // self.heads, -1)
         q_out = self.query.repeat(batch, 1, 1)
-        q_out = q_out.view(-1, self.channels // self.heads)
 
-        out = torch.mm(q_out, k_out)
+        out = (q_out * k_out).sum(dim=2, keepdim=True) * self.temperture
         out = F.softmax(out, dim=-1)
-        out = torch.mm(out, v_out)
+
+        # print attention info
+        self.logger.info("Pooling:")
+        if not self.training and x.get_device() == 1 and self.cfg.DISP_ATTENTION:
+            for head in range(self.heads):
+                self.logger.info("head {}".format(head))
+                for h in range(height):
+                    loggerInfo = "{:.3f} " * self.width
+                    self.logger.info(loggerInfo.format(*out[0][head][0][h*width:(h+1)*width].tolist()))
+
+        out = (out * v_out).sum(dim=-1)
         out = out.view(batch, self.channels, 1, 1)
 
         return out

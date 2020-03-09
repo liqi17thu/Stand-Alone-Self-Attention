@@ -108,7 +108,7 @@ class SAFull(nn.Module):
 
         self.reset_parameters()
 
-    def forward(self, x):
+    def forward(self, x, r):
         batch, channels, height, width = x.size()
 
         q_out = self.query_conv(x)
@@ -144,7 +144,7 @@ class SAFull(nn.Module):
                         self.logger.info("height {} width {}".format(h, w))
                         for k in range(height):
                             loggerInfo = "{:.3f} " * width
-                            self.logger.info(loggerInfo.format(*out[0][head][h][w][k*width:(k+1)*width].tolist()))
+                            self.logger.info(loggerInfo.format(*temp[0][head][h][w][k].tolist()))
 
 
         out = torch.bmm(out, v_out)
@@ -303,8 +303,8 @@ class SABottleneck(nn.Module):
         )
 
         padding = get_same_padding(kernel_size)
-        self.sa_conv = SAFull(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, encoding=encoding,
-                              temperture=temperture, logger=logger, cfg=cfg)
+        self.sa_conv = SAFull(width, width, kernel_size, stride, padding, heads,
+                              logger=logger, cfg=cfg)
         self.non_linear = nn.Sequential(
             nn.BatchNorm2d(width),
             nn.ReLU(),

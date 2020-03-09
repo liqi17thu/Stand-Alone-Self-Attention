@@ -16,6 +16,7 @@ __C.DISTRIBUTED = True
 __C.GPUS = 8
 __C.AUTO_RESUME = False
 __C.TEST = False
+__C.DISP_ATTENTION = False
 
 __C.TRAIN = CN()
 

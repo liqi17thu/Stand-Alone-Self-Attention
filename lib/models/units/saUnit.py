@@ -122,18 +122,30 @@ class SAFull(nn.Module):
 
         q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride)
         q_out = q_out.permute(0, 1, 3, 4, 2).contiguous()
-        q_out = q_out.view(batch, -1, self.out_channels // self.heads)
+        q_out = q_out.view(batch * self.heads, -1, self.out_channels // self.heads)
 
         k_out = k_out.view(batch, self.heads, self.out_channels // self.heads, height, width)
-        k_out = k_out.permute(0, 2, 1, 3, 4).contiguous()
-        k_out = k_out.view(batch, self.out_channels // self.heads, -1)
+        k_out = k_out.view(batch * self.heads, self.out_channels // self.heads, -1)
 
         v_out = v_out.view(batch, self.heads, self.out_channels // self.heads, height, width)
         v_out = v_out.permute(0, 1, 3, 4, 2).contiguous()
-        v_out = v_out.view(batch, -1, self.out_channels // self.heads)
+        v_out = v_out.view(batch * self.heads, -1, self.out_channels // self.heads)
 
         out = torch.bmm(q_out, k_out)
         out = F.softmax(out, dim=-1)
+
+        # print attention info
+        temp = out.view(batch, self.heads, height//self.stride, width//self.stride, height, width)
+        if not self.training and x.get_device() == 1 and self.cfg.DISP_ATTENTION:
+            for head in range(self.heads):
+                self.logger.info("head {}".format(head))
+                for h in range(height // self.stride):
+                    for w in range(width // self.stride):
+                        self.logger.info("height {} width {}".format(h, w))
+                        for k in range(height):
+                            loggerInfo = "{:.3f} " * width
+                            self.logger.info(loggerInfo.format(*out[0][head][h][w][k*width:(k+1)*width].tolist()))
+
 
         out = torch.bmm(out, v_out)
         out = out.view(batch, self.heads, height // self.stride, width // self.stride, self.out_channels // self.heads)
@@ -291,7 +303,7 @@ class SABottleneck(nn.Module):
         )
 
         padding = get_same_padding(kernel_size)
-        self.sa_conv = SAConv(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, encoding=encoding,
+        self.sa_conv = SAFull(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, encoding=encoding,
                               temperture=temperture, logger=logger, cfg=cfg)
         self.non_linear = nn.Sequential(
             nn.BatchNorm2d(width),

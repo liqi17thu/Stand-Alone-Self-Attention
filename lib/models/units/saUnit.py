@@ -303,7 +303,7 @@ class SABottleneck(nn.Module):
         )
 
         padding = get_same_padding(kernel_size)
-        self.sa_conv = SAFull(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, encoding=encoding,
+        self.sa_conv = SAConv(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, encoding=encoding,
                               temperture=temperture, logger=logger, cfg=cfg)
         self.non_linear = nn.Sequential(
             nn.BatchNorm2d(width),

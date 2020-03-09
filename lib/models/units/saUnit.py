@@ -115,27 +115,40 @@ class SAFull(nn.Module):
         k_out = self.key_conv(x)
         v_out = self.value_conv(x)
 
-        # relative embedding
+        # positional embedding
         k_out = k_out.view(batch, self.out_channels, -1)
         k_out = self.encoder(k_out)
         k_out = k_out.view(batch, self.out_channels, height, width)
 
         q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride)
         q_out = q_out.permute(0, 1, 3, 4, 2).contiguous()
-        q_out = q_out.view(-1, self.out_channels // self.heads)
+        q_out = q_out.view(batch * self.heads, -1, self.out_channels // self.heads)
 
         k_out = k_out.view(batch, self.heads, self.out_channels // self.heads, height, width)
-        k_out = k_out.permute(2, 0, 1, 3, 4).contiguous()
-        k_out = k_out.view(self.out_channels // self.heads, -1)
+        k_out = k_out.view(batch * self.heads, self.out_channels // self.heads, -1)
 
         v_out = v_out.view(batch, self.heads, self.out_channels // self.heads, height, width)
         v_out = v_out.permute(0, 1, 3, 4, 2).contiguous()
-        v_out = v_out.view(-1, self.out_channels // self.heads)
+        v_out = v_out.view(batch * self.heads, -1, self.out_channels // self.heads)
 
-        out = torch.mm(q_out, k_out)
+        out = torch.bmm(q_out, k_out)
         out = F.softmax(out, dim=-1)
 
-        out = torch.mm(out, v_out)
+        # print attention info
+
+        if not self.training and x.get_device() == 1 and self.cfg.DISP_ATTENTION:
+            temp = out.view(batch, self.heads, height // self.stride, width // self.stride, height, width)
+            for head in range(self.heads):
+                self.logger.info("head {}".format(head))
+                for h in range(height // self.stride):
+                    for w in range(width // self.stride):
+                        self.logger.info("height {} width {}".format(h, w))
+                        for k in range(height):
+                            loggerInfo = "{:.3f} " * width
+                            self.logger.info(loggerInfo.format(*temp[0][head][h][w][k].tolist()))
+
+
+        out = torch.bmm(out, v_out)
         out = out.view(batch, self.heads, height // self.stride, width // self.stride, self.out_channels // self.heads)
         out = out.permute(0, 1, 4, 2, 3).contiguous()
         out = out.view(batch, -1, height // self.stride, width // self.stride)
@@ -182,8 +195,8 @@ class SAPooling(nn.Module):
         out = F.softmax(out, dim=-1)
 
         # print attention info
-        self.logger.info("Pooling:")
         if not self.training and x.get_device() == 1 and self.cfg.DISP_ATTENTION:
+            self.logger.info("Pooling:")
             for head in range(self.heads):
                 self.logger.info("head {}".format(head))
                 for h in range(height):

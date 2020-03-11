@@ -165,8 +165,8 @@ class GradualWarmupScheduler(_LRScheduler):
         return [base_lr / self.multiplier * ((self.multiplier - 1.) * self.last_epoch / self.total_epoch + 1.)
                 for base_lr in self.base_lrs]
 
-    def step(self, epoch):
-        if epoch > self.total_epoch:
+    def step(self, epoch=None):
+        if epoch > self.total_epoch and epoch is not None:
             self.after_scheduler.step(epoch - self.total_epoch)
         else:
             super(GradualWarmupScheduler, self).step(epoch)

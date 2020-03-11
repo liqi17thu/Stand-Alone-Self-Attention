@@ -100,6 +100,12 @@ class SAResNet(nn.Module):
         return out
 
 
+def SAResNet17(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
+               encoding='learnable', temperture=1.0, attention_logger=None, cfg=None):
+    block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
+    return SAResNet(block, [1, 2, 1, 1], num_classes, heads, kernel_size,
+                    stem, num_resblock, with_conv, encoding, temperture, attention_logger, cfg)
+
 def SAResNet20(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
                encoding='learnable', temperture=1.0, attention_logger=None, cfg=None):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]

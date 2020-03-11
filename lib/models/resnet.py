@@ -131,5 +131,9 @@ def resnet20(pretrained=False, progress=True, **kwargs):
     return _resnet('resnet20', Bottleneck, [1, 2, 2, 1], pretrained, progress, **kwargs)
 
 
+def resnet26(pretrained=False, progress=True, **kwargs):
+    return _resnet('resnet20', Bottleneck, [1, 2, 4, 1], pretrained, progress, **kwargs)
+
+
 def resnet34(pretrained=False, progress=True, **kwargs):
     return _resnet('resnet34', BasicBlock, [3, 4, 6, 3], pretrained, progress, **kwargs)

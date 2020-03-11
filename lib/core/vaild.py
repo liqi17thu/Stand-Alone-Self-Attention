@@ -32,8 +32,7 @@ def validate(model, test_loader, criterion, epoch, cfg, logger, attention_logger
             top5.update(prec5.item(), N)
 
             step += 1
-            if step % cfg.TRAIN.DISP == 0 and epoch > 80:
-                cfg.DISP_ATTENTION = True
+            if step % cfg.TRAIN.DISP == 0:
                 logger.info("Test: Epoch {}/{}  Time: {:.3f} Loss {losses.avg:.3f} "
                             "Prec@(1,5) ({top1.avg:.1%}, {top5.avg:.1%})".format(
                     epoch, cfg.TRAIN.EPOCH, (time.time() - sta_time) / cfg.TRAIN.DISP,
@@ -41,6 +40,8 @@ def validate(model, test_loader, criterion, epoch, cfg, logger, attention_logger
 
                 writer.add_scalar('Loss/vaild', losses.avg, epoch * len(test_loader) + i)
                 writer.add_scalar('Accuracy/vaild', top1.avg, epoch * len(test_loader) + i)
+            if step % cfg.TRAIN.DISP == 0 and epoch > 80:
+                cfg.DISP_ATTENTION = True
             else:
                 cfg.DISP_ATTENTION = False
 

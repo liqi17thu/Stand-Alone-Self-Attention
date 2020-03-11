@@ -5,8 +5,8 @@ import torch.nn.init as init
 
 
 from .utils import get_same_padding
-from .activation import Hswish
 from .postionalEncoding import PositionalEncoding, SinePositionalEncoding
+from .shake_shake import get_alpha_beta, shake_function
 
 
 class SAConv(nn.Module):
@@ -135,8 +135,9 @@ class SAFull(nn.Module):
         out = F.softmax(out, dim=-1)
 
         # print attention info
-        temp = out.view(batch, self.heads, height//self.stride, width//self.stride, height, width)
+
         if not self.training and x.get_device() == 1 and self.cfg.DISP_ATTENTION:
+            temp = out.view(batch, self.heads, height // self.stride, width // self.stride, height, width)
             for head in range(self.heads):
                 self.logger.info("head {}".format(head))
                 for h in range(height // self.stride):
@@ -144,7 +145,7 @@ class SAFull(nn.Module):
                         self.logger.info("height {} width {}".format(h, w))
                         for k in range(height):
                             loggerInfo = "{:.3f} " * width
-                            self.logger.info(loggerInfo.format(*out[0][head][h][w][k*width:(k+1)*width].tolist()))
+                            self.logger.info(loggerInfo.format(*temp[0][head][h][w][k].tolist()))
 
 
         out = torch.bmm(out, v_out)
@@ -194,8 +195,8 @@ class SAPooling(nn.Module):
         out = F.softmax(out, dim=-1)
 
         # print attention info
-        self.logger.info("Pooling:")
         if not self.training and x.get_device() == 1 and self.cfg.DISP_ATTENTION:
+            self.logger.info("Pooling:")
             for head in range(self.heads):
                 self.logger.info("head {}".format(head))
                 for h in range(height):
@@ -337,7 +338,14 @@ class SABottleneck(nn.Module):
         out = self.conv1(x)
 
         if self.with_conv:
-            out = self.conv_2_1(out, r) + self.conv_2_2(out)
+            if self.training:
+                shake_config = (True, True, True)
+            else:
+                shake_config = (False, False, False)
+            alpha, beta = get_alpha_beta(x.size(0), shake_config, x.device)
+            out1 = self.conv_2_1(out, r)
+            out2 = self.conv_2_2(out)
+            out = shake_function(out1, out2, alpha, beta)
         else:
             out = self.conv_2_1(out, r)
 

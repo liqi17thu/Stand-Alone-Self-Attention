@@ -67,7 +67,7 @@ parser.add_argument('name', type=str)
 parser.add_argument('--cfg', type=str, default='./experiments/yaml/baseline.yaml')
 
 args, unknown = parser.parse_known_args()
-cfg.merge_from_file(args.config)
+cfg.merge_from_file(args.cfg)
 cfg.merge_from_list(unknown)
 
 # inference some folder dir

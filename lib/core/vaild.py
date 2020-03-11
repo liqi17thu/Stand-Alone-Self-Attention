@@ -15,7 +15,8 @@ def validate(model, test_loader, criterion, epoch, cfg, logger, attention_logger
 
 
     step = 0
-    attention_logger.info("Epoch {}".format(epoch))
+    if epoch > 80:
+        attention_logger.info("Epoch {}".format(epoch))
     with torch.no_grad():
         sta_time = time.time()
         for i, (data, target) in enumerate(test_loader):

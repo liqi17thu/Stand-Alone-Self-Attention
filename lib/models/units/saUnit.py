@@ -214,7 +214,6 @@ class SAPooling(nn.Module):
 
         init.normal_(self.query, 0, 1)
 
-
 class SAStem(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, groups=1, m=4, bias=False):
         super(SAStem, self).__init__()
@@ -281,6 +280,76 @@ class SAStem(nn.Module):
         init.normal_(self.emb_a, 0, 1)
         init.normal_(self.emb_b, 0, 1)
         init.normal_(self.emb_mix, 0, 1)
+
+
+class SABasic(nn.Module):
+    expansion = 1
+
+    def __init__(self, in_channels, out_channels, stride, kernel_size, groups=1, base_width=64, heads=8,
+                 with_conv=False, r_dim=256, encoding='learnable', temperture=1.0, logger=None, cfg=None):
+        super(SABasic, self).__init__()
+        self.stride = stride
+        self.heads = heads
+        self.kernel_size = kernel_size
+        self.with_conv = with_conv
+        self.cfg = cfg
+
+        padding = get_same_padding(kernel_size)
+        self.sa_conv_1 = SAConv(in_channels, out_channels, kernel_size, stride, padding, heads, r_dim=r_dim, encoding=encoding,
+                              temperture=temperture, logger=logger, cfg=cfg)
+        self.bn1 = nn.BatchNorm2d(out_channels)
+
+        self.sa_conv_2 = SAConv(out_channels, out_channels, kernel_size, 1, padding, heads, r_dim=r_dim, encoding=encoding,
+                              temperture=temperture, logger=logger, cfg=cfg)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+
+        if with_conv:
+            self.conv_1 = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=self.stride, padding=1, bias=False),
+                nn.BatchNorm2d(out_channels),
+                nn.ReLU(),
+            )
+
+            self.conv_2 = nn.Sequential(
+                nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=False),
+                nn.BatchNorm2d(out_channels),
+            )
+
+        self.shortcut = nn.Sequential()
+        if stride != 1 or in_channels != self.expansion * out_channels:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_channels, self.expansion * out_channels, kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(self.expansion * out_channels)
+            )
+
+    def forward(self, x, r=None):
+        if self.with_conv:
+            if self.training:
+                shake_config = (True, True, True)
+            else:
+                shake_config = (False, False, False)
+            alpha1, beta1 = get_alpha_beta(x.size(0), shake_config, x.device)
+            sa_out_1 = self.sa_conv_1(x, r)
+            sa_out_1 = self.bn1(sa_out_1)
+            sa_out_1 = F.relu(sa_out_1)
+            conv_out_1 = self.conv1(x)
+            out = shake_function(sa_out_1, conv_out_1, alpha1, beta1)
+            sa_out_2 = self.sa_conv_2(out, r)
+            sa_out_2 = self.non_linear_2(sa_out_2)
+            conv_out_2 = self.conv_2(out)
+            alpha2, beta2 = get_alpha_beta(x.size(0), shake_config, x.device)
+            out = shake_function(sa_out_2, conv_out_2, alpha2, beta2)
+        else:
+            out = self.sa_conv_1(x, r)
+            out = self.bn1(out)
+            out = F.relu(out)
+            out = self.sa_conv_2(out, r)
+            out = self.bn2(out)
+
+        out += self.shortcut(x)
+        out = F.relu(out)
+
+        return out
 
 
 class SABottleneck(nn.Module):

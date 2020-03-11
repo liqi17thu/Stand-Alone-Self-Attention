@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 
-from .units.saUnit import SAStem, SABottleneck
+from .units.saUnit import SAStem, SABasic, SABottleneck
 from .units.resUnit import Bottleneck
 
 
@@ -98,6 +98,13 @@ class SAResNet(nn.Module):
         out = self.dense(out)
 
         return out
+
+
+def SAResNet18(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
+               encoding='learnable', temperture=1.0, attention_logger=None, cfg=None):
+    block = [Bottleneck for _ in range(num_resblock)] + [SABasic for _ in range(4 - num_resblock)]
+    return SAResNet(block, [2, 2, 2, 2], num_classes, heads, kernel_size,
+                    stem, num_resblock, with_conv, encoding, temperture, attention_logger, cfg)
 
 
 def SAResNet20(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,

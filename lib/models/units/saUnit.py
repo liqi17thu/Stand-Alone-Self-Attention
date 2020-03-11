@@ -5,8 +5,8 @@ import torch.nn.init as init
 
 
 from .utils import get_same_padding
-from .activation import Hswish
 from .postionalEncoding import PositionalEncoding, SinePositionalEncoding
+from .shake_shake import get_alpha_beta, shake_function
 
 
 class SAConv(nn.Module):
@@ -338,7 +338,14 @@ class SABottleneck(nn.Module):
         out = self.conv1(x)
 
         if self.with_conv:
-            out = self.conv_2_1(out, r) + self.conv_2_2(out)
+            if self.training:
+                shake_config = (True, True, True)
+            else:
+                shake_config = (False, False, False)
+            alpha, beta = get_alpha_beta(x.size(0), shake_config, x.device)
+            out1 = self.conv_2_1(out, r)
+            out2 = self.conv_2_2(out)
+            out = shake_function(out1, out2, alpha, beta)
         else:
             out = self.conv_2_1(out, r)
 

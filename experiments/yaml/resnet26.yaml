@@ -1,0 +1,4 @@
+TRAIN:
+  MODEL:
+    NAME: 'SAResNet26'
+    NUM_RESBLOCK: 4

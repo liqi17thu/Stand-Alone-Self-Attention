@@ -16,7 +16,7 @@ class BasicBlock(nn.Module):
     expansion = 1
     __constants__ = ['downsample']
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None, groups=1,
+    def __init__(self, inplanes, planes, stride=1, groups=1,
                  base_width=64, dilation=1, norm_layer=None):
         super(BasicBlock, self).__init__()
         if norm_layer is None:
@@ -31,11 +31,16 @@ class BasicBlock(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = conv3x3(planes, planes)
         self.bn2 = norm_layer(planes)
-        self.downsample = downsample
         self.stride = stride
 
+        self.shortcut = nn.Sequential()
+        if stride != 1 or inplanes != self.expansion * planes:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(inplanes, self.expansion * planes, kernel_size=1, stride=stride, bias=False),
+                norm_layer(self.expansion * planes)
+            )
+
     def forward(self, x):
-        identity = x
 
         out = self.conv1(x)
         out = self.bn1(out)
@@ -44,10 +49,7 @@ class BasicBlock(nn.Module):
         out = self.conv2(out)
         out = self.bn2(out)
 
-        if self.downsample is not None:
-            identity = self.downsample(x)
-
-        out += identity
+        out += self.shortcut(x)
         out = self.relu(out)
 
         return out

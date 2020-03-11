@@ -1,0 +1,6 @@
+DATASET:
+  NAME: 'CUB'
+  TRAIN_DIR: "data/CUB/base.json"
+  TEST_DIR: "data/CUB/val.json"
+  IMAGE_SIZE: 224
+  TEST_SIZE: 224

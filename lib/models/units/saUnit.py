@@ -284,7 +284,6 @@ class SAStem(nn.Module):
 
 class SABasic(nn.Module):
     expansion = 1
-
     def __init__(self, in_channels, out_channels, stride, kernel_size, groups=1, base_width=64, heads=8,
                  with_conv=False, r_dim=256, encoding='learnable', temperture=1.0, logger=None, cfg=None):
         super(SABasic, self).__init__()

@@ -7,6 +7,7 @@ import shutil
 
 import logging
 import logging.handlers
+from lib.config import cfg
 
 
 class AvgrageMeter(object):
@@ -172,13 +173,19 @@ class GradualWarmupScheduler(_LRScheduler):
             super(GradualWarmupScheduler, self).step(epoch)
 
 
-def get_scheduler(optimizer, n_iter_per_epoch, cfg):
+def get_scheduler(optimizer, n_iter_per_epoch):
     cosine_scheduler = CosineAnnealingLR(
         optimizer=optimizer, eta_min=0.000001,
-        T_max=(cfg.TRAIN.EPOCH - cfg.TRAIN.START_EPOCH - cfg.TRAIN.OPTIM.WARMUP_EPOCH) * n_iter_per_epoch)
+        T_max=(cfg.train.epoch - cfg.train.start_epoch - cfg.optim.warmup_epoch) * n_iter_per_epoch)
     scheduler = GradualWarmupScheduler(
         optimizer,
-        multiplier=cfg.TRAIN.OPTIM.WARMUP_MULTIPLIER,
-        total_epoch=cfg.TRAIN.OPTIM.WARMUP_EPOCH * n_iter_per_epoch,
+        multiplier=cfg.optim.warmup_multiplier,
+        total_epoch=cfg.optim.warmup_epoch * n_iter_per_epoch,
         after_scheduler=cosine_scheduler)
     return scheduler
+
+
+def check_dir(folder):
+    if not os.path.isdir(folder):
+        os.makedirs(folder)
+    return folder

@@ -7,25 +7,24 @@ import torch.nn.init as init
 from .utils import get_same_padding
 from .postionalEncoding import PositionalEncoding, SinePositionalEncoding
 from .shake_shake import get_alpha_beta, shake_function
+from lib.config import cfg
 
 
 class SAConv(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, r_dim=256,
-                 encoding='learnable', temperture=1.0, logger=None, cfg=None):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, r_dim=256, logger=None):
         super(SAConv, self).__init__()
         self.out_channels = out_channels
         self.kernel_size = kernel_size
         self.stride = stride
         self.padding = padding
         self.heads = heads
-        self.encoding = encoding
-        self.temperture = temperture
+        self.encoding = cfg.model.encoding
+        self.temperature = cfg.model.temperature
         self.logger = logger
-        self.cfg = cfg
 
         assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
-        if encoding != 'none':
+        if self.encoding != 'none':
             self.encoder = PositionalEncoding(out_channels, kernel_size, heads, bias, encoding, r_dim)
 
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
@@ -65,7 +64,7 @@ class SAConv(nn.Module):
         out = F.softmax(out, dim=-1)
 
         # print attention info
-        if not self.training and x.get_device() == 1 and self.cfg.DISP_ATTENTION:
+        if not self.training and x.get_device() == 1 and self.cfg.disp_attention:
             for head in range(self.heads):
                 self.logger.info("head {}".format(head))
                 for h in range(height // self.stride):
@@ -87,8 +86,7 @@ class SAConv(nn.Module):
 
 
 class SAFull(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False,
-                 logger=None, cfg=None):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, logger=None):
         super(SAFull, self).__init__()
         self.out_channels = out_channels
         self.kernel_size = kernel_size
@@ -96,7 +94,6 @@ class SAFull(nn.Module):
         self.padding = padding
         self.heads = heads
         self.logger = logger
-        self.cfg = cfg
 
         assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
@@ -136,7 +133,7 @@ class SAFull(nn.Module):
 
         # print attention info
 
-        if not self.training and x.get_device() == 1 and self.cfg.DISP_ATTENTION:
+        if not self.training and x.get_device() == 1 and self.cfg.disp_attention:
             temp = out.view(batch, self.heads, height // self.stride, width // self.stride, height, width)
             for head in range(self.heads):
                 self.logger.info("head {}".format(head))
@@ -146,7 +143,6 @@ class SAFull(nn.Module):
                         for k in range(height):
                             loggerInfo = "{:.3f} " * width
                             self.logger.info(loggerInfo.format(*temp[0][head][h][w][k].tolist()))
-
 
         out = torch.bmm(out, v_out)
         out = out.view(batch, self.heads, height // self.stride, width // self.stride, self.out_channels // self.heads)
@@ -162,13 +158,12 @@ class SAFull(nn.Module):
 
 
 class SAPooling(nn.Module):
-    def __init__(self, channels, heads=1, bias=False, logger=None, cfg=None, temperture=1.0):
+    def __init__(self, channels, heads=1, bias=False, logger=None):
         super(SAPooling, self).__init__()
         self.channels = channels
         self.heads = heads
         self.logger = logger
-        self.cfg = cfg
-        self.temperture = temperture
+        self.temperature = cfg.model.temperature
 
         assert self.channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
@@ -195,7 +190,7 @@ class SAPooling(nn.Module):
         out = F.softmax(out, dim=-1)
 
         # print attention info
-        if not self.training and x.get_device() == 1 and self.cfg.DISP_ATTENTION:
+        if not self.training and x.get_device() == 1 and self.cfg.disp_attention:
             self.logger.info("Pooling:")
             for head in range(self.heads):
                 self.logger.info("head {}".format(head))
@@ -284,22 +279,18 @@ class SAStem(nn.Module):
 
 class SABasic(nn.Module):
     expansion = 1
-    def __init__(self, in_channels, out_channels, stride, kernel_size, groups=1, base_width=64, heads=8,
-                 with_conv=False, r_dim=256, encoding='learnable', temperture=1.0, logger=None, cfg=None):
+    def __init__(self, in_channels, out_channels, stride, kernel_size, heads=8, with_conv=False, r_dim=256, logger=None):
         super(SABasic, self).__init__()
         self.stride = stride
         self.heads = heads
         self.kernel_size = kernel_size
         self.with_conv = with_conv
-        self.cfg = cfg
 
         padding = get_same_padding(kernel_size)
-        self.sa_conv_1 = SAConv(in_channels, out_channels, kernel_size, stride, padding, heads, r_dim=r_dim, encoding=encoding,
-                              temperture=temperture, logger=logger, cfg=cfg)
+        self.sa_conv_1 = SAConv(in_channels, out_channels, kernel_size, stride, padding, heads, r_dim=r_dim, logger=logger)
         self.bn1 = nn.BatchNorm2d(out_channels)
 
-        self.sa_conv_2 = SAConv(out_channels, out_channels, kernel_size, 1, padding, heads, r_dim=r_dim, encoding=encoding,
-                              temperture=temperture, logger=logger, cfg=cfg)
+        self.sa_conv_2 = SAConv(out_channels, out_channels, kernel_size, 1, padding, heads, r_dim=r_dim, logger=logger)
         self.bn2 = nn.BatchNorm2d(out_channels)
 
         if with_conv:
@@ -354,14 +345,12 @@ class SABasic(nn.Module):
 class SABottleneck(nn.Module):
     expansion = 4
 
-    def __init__(self, in_channels, out_channels, stride, kernel_size, groups=1, base_width=64, heads=8,
-                 with_conv=False, r_dim=256, encoding='learnable', temperture=1.0, logger=None, cfg=None):
+    def __init__(self, in_channels, out_channels, stride, kernel_size, groups=1, base_width=64, heads=8, r_dim=256, logger=None):
         super(SABottleneck, self).__init__()
         self.stride = stride
         self.heads = heads
         self.kernel_size = kernel_size
-        self.with_conv = with_conv
-        self.cfg = cfg
+        self.with_conv = cfg.model.with_conv
 
         width = int(out_channels * (base_width / 64.)) * groups
 
@@ -372,14 +361,13 @@ class SABottleneck(nn.Module):
         )
 
         padding = get_same_padding(kernel_size)
-        self.sa_conv = SAConv(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, encoding=encoding,
-                              temperture=temperture, logger=logger, cfg=cfg)
+        self.sa_conv = SAConv(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, logger=logger)
         self.non_linear = nn.Sequential(
             nn.BatchNorm2d(width),
             nn.ReLU(),
         )
 
-        if with_conv:
+        if self.with_conv:
             self.conv_2_2 = nn.Sequential(
                 nn.Conv2d(width, width, kernel_size=3, stride=self.stride, padding=1, bias=False),
                 nn.BatchNorm2d(width),

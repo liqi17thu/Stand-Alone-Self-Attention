@@ -2,52 +2,52 @@ import torch
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from lib.data.data_util import ImageNetPolicy, ToBGRTensor
+from lib.config import cfg
 
-
-def imagenet(cfg):
-    normalize = transforms.Normalize(mean=cfg.TRAIN.DATASET.MEAN, std=cfg.TRAIN.DATASET.STD)
-    if cfg.TRAIN.DATASET.USE_AA:
+def imagenet():
+    normalize = transforms.Normalize(mean=cfg.dataset.mean, std=cfg.dataset.std)
+    if cfg.dataset.use_aa:
         train_data = datasets.ImageFolder(
-            cfg.TRAIN.DATASET.TRAIN_DIR,
+            cfg.dataset.train_dir,
             transforms.Compose([
-                transforms.RandomResizedCrop(cfg.TRAIN.DATASET.IMAGE_SIZE),
+                transforms.RandomResizedCrop(cfg.dataset.image_size),
                 transforms.RandomHorizontalFlip(),
                 ImageNetPolicy(),
-                ToBGRTensor() if cfg.TRAIN.DATASET.BGR else transforms.ToTensor(),
+                ToBGRTensor() if cfg.dataset.bgr else transforms.ToTensor(),
                 normalize,
             ]))
     else:
         train_data = datasets.ImageFolder(
-            cfg.TRAIN.DATASET.TRAIN_DIR,
+            cfg.dataset.train_dir,
             transforms.Compose([
-                transforms.RandomResizedCrop(cfg.TRAIN.DATASET.IMAGE_SIZE),
+                transforms.RandomResizedCrop(cfg.dataset.image_size),
                 transforms.RandomHorizontalFlip(),
                 transforms.ColorJitter(
                     brightness=0.4,
                     contrast=0.4,
                     saturation=0.4),
-                ToBGRTensor() if cfg.TRAIN.DATASET.BGR else transforms.ToTensor(),
+                ToBGRTensor() if cfg.dataset.bgr else transforms.ToTensor(),
                 normalize,
             ]))
 
     test_data = datasets.ImageFolder(
-        cfg.TRAIN.DATASET.TEST_DIR,
+        cfg.dataset.test_dir,
         transforms.Compose([
-            transforms.Resize(cfg.TRAIN.DATASET.TEST_RESIZE),
-            transforms.CenterCrop(cfg.TRAIN.DATASET.TEST_SIZE),
-            ToBGRTensor() if cfg.TRAIN.DATASET.BGR else transforms.ToTensor(),
+            transforms.Resize(cfg.dataset.test_resize),
+            transforms.CenterCrop(cfg.dataset.test_size),
+            ToBGRTensor() if cfg.dataset.bgr else transforms.ToTensor(),
             normalize,
         ]))
 
-    train_loader = torch.utils.data.DataLoader(
-        train_data, batch_size=cfg.TRAIN.DATASET.BATCH_SIZE,
+    train_loader = torch.utils.data.dataloader(
+        train_data, batch_size=cfg.dataset.batch_size,
         shuffle=True,
-        pin_memory=True, num_workers=cfg.TRAIN.DATASET.WORKERS)
+        pin_memory=True, num_workers=cfg.dataset.workers)
 
-    test_loader = torch.utils.data.DataLoader(
-        test_data, batch_size=cfg.TRAIN.DATASET.BATCH_SIZE,
+    test_loader = torch.utils.data.dataloader(
+        test_data, batch_size=cfg.dataset.batch_size,
         shuffle=False,
-        pin_memory=True, num_workers=cfg.TRAIN.DATASET.WORKERS)
+        pin_memory=True, num_workers=cfg.dataset.workers)
 
     return train_loader, test_loader, 1000
 

@@ -1,62 +1,97 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+import argparse
+from os.path import join
 
-from yacs.config import CfgNode as CN
+import os
+import shutil
 
-__C = CN()
+from yacs.config import CfgNode
 
-cfg = __C
+from .utils import check_dir
 
-__C.SAVE_PATH = './experiments'
+cfg = CfgNode(dict(
+    save_path='./experiments',
+    cuda=True,
+    distributed=True,
+    gpus=8,
+    auto_resume=False,
+    test=False,
+    disp_attention=False,
 
-__C.CUDA = True
-__C.DISTRIBUTED = True
-__C.GPUS = 8
-__C.AUTO_RESUME = False
-__C.TEST = False
-__C.DISP_ATTENTION = False
+    model=dict(
+        name='SAResNet26',
+        stem='cifar_conv',
+        heads=8,
+        kernel=7,
+        pre_trained=False,
+        num_resblock=2,
+        with_conv=False,
+        encoding='learnable',
+        temperature=1.0,
+        r_dim=256,
+    ),
+    train=dict(
+        epoch=100,
+        start_epoch=0,
+        disp=100,
+    ),
+    dataset=dict(
+        name="cifar10",
+        split_ratio=0.5,
+        train_dir="/data/home/v-had/data_local/imagenet/train",
+        test_dir="/data/home/v-had/data_local/imagenet/val",
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225],
+        batch_size=50,
+        image_size=32,
+        workers=8,
+        use_aa=True,
+        bgr=False,
+    ),
+    crit=dict(
+        smooth=0.1,
+    ),
+    optim=dict(
+        method="sgd",
+        lr=0.05,
+        momentum=0.9,
+        warmup_epoch=20,
+        warmup_multiplier=16,
+        wd=0.0001,
+    ),
+))
 
-__C.TRAIN = CN()
+# load from file and overrided by command line arguments
 
-__C.TRAIN.EPOCH = 100
-__C.TRAIN.START_EPOCH = 0
-__C.TRAIN.DISP = 100
+parser = argparse.ArgumentParser('Stand-Alone Self-Attention')
+parser.add_argument('name', type=str)
+parser.add_argument('--cfg', type=str, default='./experiments/yaml/baseline.yaml')
 
-__C.TRAIN.MODEL = CN()
-__C.TRAIN.MODEL.NAME = 'SAResNet26'
-__C.TRAIN.MODEL.STEM = 'cifar_conv'
-__C.TRAIN.MODEL.HEADS = 8
-__C.TRAIN.MODEL.KERNEL = 7
-__C.TRAIN.MODEL.PRE_TRAINED = False
-__C.TRAIN.MODEL.NUM_RESBLOCK = 2
-__C.TRAIN.MODEL.WITH_CONV = False
-__C.TRAIN.MODEL.ENCODING = 'learnable'
-__C.TRAIN.MODEL.TEMPERTURE = 1.0
+args, unknown = parser.parse_known_args()
+cfg.merge_from_file(args.config)
+cfg.merge_from_list(unknown)
 
-__C.TRAIN.DATASET = CN()
-__C.TRAIN.DATASET.NAME = 'cifar10'
-__C.TRAIN.DATASET.SPLIT_RATIO = 0.5
-__C.TRAIN.DATASET.TRAIN_DIR = '/data/home/v-had/data_local/imagenet/train'
-__C.TRAIN.DATASET.TEST_DIR = '/data/home/v-had/data_local/imagenet/val'
-__C.TRAIN.DATASET.MEAN = [0.485, 0.456, 0.406]
-__C.TRAIN.DATASET.STD = [0.229, 0.224, 0.225]
-__C.TRAIN.DATASET.BATCH_SIZE = 50
-__C.TRAIN.DATASET.IMAGE_SIZE = 32
-__C.TRAIN.DATASET.TEST_RESIZE = 256
-__C.TRAIN.DATASET.TEST_SIZE = 224
-__C.TRAIN.DATASET.WORKERS = 8
-__C.TRAIN.DATASET.USE_AA = True
-__C.TRAIN.DATASET.BGR = False
+# inference some folder dir
+cfg.save_path = join(cfg.save_path, 'train')
+check_dir(cfg.save_path)
 
-__C.TRAIN.CRIT = CN()
-__C.TRAIN.CRIT.SMOOTH=0.1
+cfg.save_path = join(cfg.save_path, args.name)
 
-__C.TRAIN.OPTIM = CN()
-__C.TRAIN.OPTIM.METHOD = 'sgd'
-__C.TRAIN.OPTIM.LR = 0.05
-__C.TRAIN.OPTIM.MOMENTUM = 0.9
-__C.TRAIN.OPTIM.WARMUP_EPOCH = 20
-__C.TRAIN.OPTIM.WARMUP_MULTIPLIER = 16
-__C.TRAIN.OPTIM.WD = 1e-4
+if not os.path.exists(cfg.save_path):
+    os.mkdir(cfg.save_path)
+elif not cfg.test:
+    key = input('Delete Existing Directory [y/n]: ')
+    if key == 'n':
+        if cfg.auto_resume:
+            pass
+        else:
+            raise ValueError("Save directory already exists")
+    elif key == 'y':
+        shutil.rmtree(cfg.save_path)
+        os.mkdir(cfg.save_path)
+    else:
+        raise ValueError("Input Not Supported!")
+
+cfg.ckp_dir = check_dir(join(cfg.save_path, 'checkpoints'))
+cfg.log_dir = check_dir(join(cfg.save_path, 'runs'))
+
+

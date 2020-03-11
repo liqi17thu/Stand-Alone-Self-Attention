@@ -3,9 +3,10 @@ import torch.nn as nn
 import time
 
 from lib.utils import AvgrageMeter, accuracy
+from lib.config import cfg
 
 
-def train(model, train_loader, optimizer, criterion, scheduler, epoch, cfg, logger, writer):
+def train(model, train_loader, optimizer, criterion, scheduler, epoch, logger, writer):
     top1 = AvgrageMeter()
     top5 = AvgrageMeter()
     losses = AvgrageMeter()
@@ -15,7 +16,7 @@ def train(model, train_loader, optimizer, criterion, scheduler, epoch, cfg, logg
     step = 0
     for i, (data, target) in enumerate(train_loader):
         sta_time = time.time()
-        if cfg.CUDA:
+        if cfg.cuda:
             data, target = data.cuda(), target.cuda()
 
         N = data.size(0)
@@ -36,10 +37,10 @@ def train(model, train_loader, optimizer, criterion, scheduler, epoch, cfg, logg
         top5.update(prec5.item(), N)
 
         step += 1
-        if step % cfg.TRAIN.DISP == 0:
+        if step % cfg.train.disp == 0:
             logger.info("Train: Epoch {}/{}  Time: {:.3f} Loss {losses.avg:.3f} LR {:.3f} "
                         "Prec@(1,5) ({top1.avg:.1%}, {top5.avg:.1%})".format(
-                        epoch, cfg.TRAIN.EPOCH, (time.time()-sta_time)/cfg.TRAIN.DISP,
+                        epoch, cfg.train.epoch, (time.time()-sta_time)/cfg.train.disp,
                         optimizer.param_groups[0]['lr'],
                         losses=losses, top1=top1, top5=top5))
 

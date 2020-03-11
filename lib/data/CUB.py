@@ -35,7 +35,7 @@ def get_loader(file_list, batch_size, train=True):
     normalize = transforms.Normalize(mean=[0.507, 0.487, 0.441], std=[0.267, 0.257, 0.276])
     if train:
         transform = transforms.Compose([
-            transforms.RandomResizedCrop(cfg.TRAIN.DATASET.IMAGE_SIZE),
+            transforms.RandomResizedCrop(cfg.dataset.image_size),
             transforms.ColorJitter(
                 brightness=0.4, contrast=0.4, saturation=0.4),
             transforms.RandomHorizontalFlip(),
@@ -43,20 +43,20 @@ def get_loader(file_list, batch_size, train=True):
             normalize
         ])
     else:
-        size = int(cfg.TRAIN.DATASET.TEST_SIZE * 1.15)
+        size = int(cfg.dataset.image_size * 1.15)
         transform = transforms.Compose([
             transforms.Resize((size, size)),
-            transforms.CenterCrop(cfg.TRAIN.DATASET.TEST_SIZE),
+            transforms.CenterCrop(cfg.DATASET.TEST_SIZE),
             transforms.ToTensor(),
             normalize,
         ])
     dataset = SimpleDataset(file_list, transform)
     loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=train,
-                                         num_workers=cfg.TRAIN.DATASET.WORKERS, pin_memory=True)
+                                         num_workers=cfg.dataset.workers, pin_memory=True)
     return loader
 
 
 def CUB(cfg):
-    train_loader = get_loader(cfg.TRAIN.DATASET.TRAIN_DIR, cfg.TRAIN.DATASET.BATCH_SIZE, True)
-    test_loader = get_loader(cfg.TRAIN.DATASET.TEST_DIR, cfg.TRAIN.DATASET.BATCH_SIZE, True)
+    train_loader = get_loader(cfg.dataset.train_dir, cfg.dataset.batch_size, True)
+    test_loader = get_loader(cfg.dataset.test_dir, cfg.dataset.batch_size, False)
     return train_loader, test_loader, 200

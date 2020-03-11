@@ -5,21 +5,18 @@ import torch.nn.init as init
 from .units.saUnit import SAStem, SABasic, SABottleneck
 from .units.resUnit import Bottleneck, BasicBlock
 
+from lib.config import cfg
+
 
 class SAResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes, heads, kernel_size, stem, num_resblock, with_conv,
-                 encoding, temperture, logger, cfg):
+    def __init__(self, block, num_blocks, num_classes, heads, kernel_size, stem, num_resblock, logger):
         super(SAResNet, self).__init__()
         self.in_places = 64
         self.heads = heads
         self.kernel_size = kernel_size
-        self.with_conv = with_conv
         self.num_resblock = num_resblock
-        self.encoding = encoding
-        self.temperture = temperture
         self.logger = logger
-        self.cfg = cfg
-        self.r_dim = 256
+        self.r_dim = cfg.model.r_dim
 
         if stem.split('_')[1] == 'sa':
             if stem.split('_')[0] == 'cifar':
@@ -58,7 +55,7 @@ class SAResNet(nn.Module):
         self.dense = nn.Linear(512 * block[3].expansion, num_classes)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-        if encoding == "xl":
+        if cfg.model.encoding == "xl":
             self.r = nn.Parameter(torch.randn(1, self.r_dim, self.kernel_size, self.kernel_size), requires_grad=True)
         else:
             self.r = None
@@ -74,8 +71,8 @@ class SAResNet(nn.Module):
         layers = []
         for stride in strides:
             if block.__name__ == "SABottleneck" or block.__name__ == "SABasic":
-                layers.append(block(self.in_places, planes, stride, self.kernel_size, heads=self.heads, with_conv=self.with_conv,
-                                    r_dim=self.r_dim, encoding=self.encoding, temperture=self.temperture, logger=self.logger, cfg=self.cfg))
+                layers.append(block(self.in_places, planes, stride, self.kernel_size, r_dim=self.r_dim,
+                                    heads=self.heads, logger=self.logger))
             else:
                 layers.append(block(self.in_places, planes, stride))
             self.in_places = planes * block.expansion
@@ -86,10 +83,10 @@ class SAResNet(nn.Module):
         for i in range(self.num_resblock):
             out = self.layers[i](out)
         for i in range(self.num_resblock, 4):
-            if not self.training and x.get_device() == 1 and self.cfg.DISP_ATTENTION:
+            if not self.training and x.get_device() == 1 and self.cfg.disp_attention:
                 self.logger.info(f"layer {i+1}")
             for (j, layer) in enumerate(self.layers[i]):
-                if not self.training and x.get_device() == 1 and self.cfg.DISP_ATTENTION:
+                if not self.training and x.get_device() == 1 and self.cfg.disp_attention:
                     self.logger.info(f"block {j}")
                 out = layer(out, self.r)
 
@@ -100,57 +97,41 @@ class SAResNet(nn.Module):
         return out
 
 
-def SAResNet17(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
-               encoding='learnable', temperture=1.0, attention_logger=None, cfg=None):
+def SAResNet17(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [1, 2, 1, 1], num_classes, heads, kernel_size,
-                    stem, num_resblock, with_conv, encoding, temperture, attention_logger, cfg)
+    return SAResNet(block, [1, 2, 1, 1], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)
 
 
-def SAResNet18(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
-               encoding='learnable', temperture=1.0, attention_logger=None, cfg=None):
+def SAResNet18(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
     block = [BasicBlock for _ in range(num_resblock)] + [SABasic for _ in range(4 - num_resblock)]
-    return SAResNet(block, [2, 2, 2, 2], num_classes, heads, kernel_size,
-                    stem, num_resblock, with_conv, encoding, temperture, attention_logger, cfg)
+    return SAResNet(block, [2, 2, 2, 2], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)
 
 
-def SAResNet20(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
-               encoding='learnable', temperture=1.0, attention_logger=None, cfg=None):
+def SAResNet20(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [1, 2, 2, 1], num_classes, heads, kernel_size,
-                    stem, num_resblock, with_conv, encoding, temperture, attention_logger, cfg)
+    return SAResNet(block, [1, 2, 2, 1], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)
 
 
-def SAResNet26(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
-               encoding='learnable', temperture=1.0, attention_logger=None, cfg=None):
+def SAResNet26(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [1, 2, 4, 1], num_classes, heads, kernel_size,
-                    stem, num_resblock, with_conv, encoding, temperture, attention_logger, cfg)
+    return SAResNet(block, [1, 2, 4, 1], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)
 
 
-def SAResNet38(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
-               encoding='learnable', temperture=1.0, attention_logger=None, cfg=None):
+def SAResNet38(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [2, 3, 5, 2], num_classes, heads, kernel_size,
-                    stem, num_resblock, with_conv, encoding, temperture, attention_logger, cfg)
+    return SAResNet(block, [2, 3, 5, 2], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)
 
 
-def SAResNet50(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
-               encoding='learnable', temperture=1.0, attention_logger=None, cfg=None):
+def SAResNet50(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [3, 4, 6, 3], num_classes, heads, kernel_size,
-                    stem, num_resblock, with_conv, encoding, temperture, attention_logger, cfg)
+    return SAResNet(block, [3, 4, 6, 3], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)
 
 
-def SAResNet101(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
-                encoding='learnable', temperture=1.0, attention_logger=None, cfg=None):
+def SAResNet101(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [3, 4, 23, 3], num_classes, heads, kernel_size,
-                    stem, num_resblock, with_conv, encoding, temperture, attention_logger, cfg)
+    return SAResNet(block, [3, 4, 23, 3], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)
 
 
-def SAResNet152(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, with_conv=False,
-                encoding='learnable', temperture=1.0, attention_logger=None, cfg=None):
+def SAResNet152(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
-    return SAResNet(block, [3, 4, 36, 3], num_classes, heads, kernel_size,
-                    stem, num_resblock, with_conv, encoding, temperture, attention_logger, cfg)
+    return SAResNet(block, [3, 4, 36, 3], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)

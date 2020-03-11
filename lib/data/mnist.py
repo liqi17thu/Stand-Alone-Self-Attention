@@ -1,7 +1,9 @@
 import torch
 from torchvision import datasets, transforms
+from lib.config import cfg
 
-def mnist(cfg):
+
+def mnist():
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(
@@ -11,16 +13,16 @@ def mnist(cfg):
     ])
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST('data', train=True, download=True, transform=transform),
-        batch_size=cfg.TRAIN.DATASET.BATCH_SIZE,
+        batch_size=cfg.dataset.batch_size,
         shuffle=True,
-        num_workers=cfg.TRAIN.DATASET.WORKERS
+        num_workers=cfg.dataset.workers
     )
 
     test_loader = torch.utils.data.DataLoader(
         datasets.MNIST('data', train=False, transform=transform),
-        batch_size=cfg.TRAIN.DATASET.BATCH_SIZE,
+        batch_size=cfg.dataset.batch_size,
         shuffle=False,
-        num_workers=cfg.TRAIN.DATASET.WORKERS
+        num_workers=cfg.dataset.workers
     )
 
     return train_loader, test_loader, 10

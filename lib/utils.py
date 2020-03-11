@@ -7,8 +7,6 @@ import shutil
 
 import logging
 import logging.handlers
-from lib.config import cfg
-
 
 class AvgrageMeter(object):
 
@@ -173,7 +171,7 @@ class GradualWarmupScheduler(_LRScheduler):
             super(GradualWarmupScheduler, self).step(epoch)
 
 
-def get_scheduler(optimizer, n_iter_per_epoch):
+def get_scheduler(optimizer, n_iter_per_epoch, cfg):
     cosine_scheduler = CosineAnnealingLR(
         optimizer=optimizer, eta_min=0.000001,
         T_max=(cfg.train.epoch - cfg.train.start_epoch - cfg.optim.warmup_epoch) * n_iter_per_epoch)

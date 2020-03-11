@@ -32,11 +32,11 @@ def main():
 
     print('Model Name: {0}'.format(cfg.model.name))
     model = eval(cfg.model.name)(num_classes=num_classes,
-                                       heads=cfg.model.heads,
-                                       kernel_size=cfg.model.kernel,
-                                       stem=cfg.model.stem,
-                                       num_resblock=cfg.model.num_resblock,
-                                       attention_logger=attention_logger)
+                                 heads=cfg.model.heads,
+                                 kernel_size=cfg.model.kernel,
+                                 stem=cfg.model.stem,
+                                 num_resblock=cfg.model.num_resblock,
+                                 attention_logger=attention_logger)
 
     if cfg.model.pre_trained:
         filename = 'best_model_' + str(cfg.dataset.name) + '_' + \
@@ -50,7 +50,8 @@ def main():
         best_acc = checkpoint['best_acc']
         model_parameters = checkpoint['parameters']
         print('Load model, Parameters: {0}, Start_epoch: {1}, Acc: {2}'.format(model_parameters, start_epoch, best_acc))
-        logger.info('Load model, Parameters: {0}, Start_epoch: {1}, Acc: {2}'.format(model_parameters, start_epoch, best_acc))
+        logger.info(
+            'Load model, Parameters: {0}, Start_epoch: {1}, Acc: {2}'.format(model_parameters, start_epoch, best_acc))
     else:
         start_epoch = cfg.train.start_epoch
         best_acc = 0.0
@@ -61,7 +62,7 @@ def main():
         criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(model.parameters(), lr=cfg.optim.lr,
                           momentum=cfg.optim.momentum, weight_decay=cfg.optim.wd)
-    scheduler = get_scheduler(optimizer, len(train_loader))
+    scheduler = get_scheduler(optimizer, len(train_loader), cfg)
 
     if cfg.cuda:
         if torch.cuda.device_count() > 1:
@@ -69,7 +70,7 @@ def main():
         model = model.cuda()
         criterion = criterion.cuda()
 
-    logger.info("Number of model parameters: {0:.2f}M".format(get_model_parameters(model)/1000000))
+    logger.info("Number of model parameters: {0:.2f}M".format(get_model_parameters(model) / 1000000))
 
     if cfg.test:
         _ = validate(model, test_loader, criterion, start_epoch, logger, attention_logger, writer)
@@ -82,7 +83,7 @@ def main():
         is_best = eval_acc > best_acc
         best_acc = max(eval_acc, best_acc)
 
-        filename = 'model_' + str(cfg.dataset.name) + '_' +\
+        filename = 'model_' + str(cfg.dataset.name) + '_' + \
                    str(cfg.model.name) + '_' + str(cfg.model.stem) + '_ckpt.tar'
         print('filename :: ', filename)
 

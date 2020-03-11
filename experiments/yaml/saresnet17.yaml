@@ -1,3 +1,2 @@
-TRAIN:
-  MODEL:
-    NAME: 'SAResNet17'
+model:
+  name: 'SAResNet17'

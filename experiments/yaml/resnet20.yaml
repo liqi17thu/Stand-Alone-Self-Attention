@@ -1,4 +1,3 @@
-TRAIN:
-  MODEL:
-    NAME: 'SAResNet20'
-    NUM_RESBLOCK: 4
+model:
+  name: 'SAResNet20'
+  num_resblock: 4

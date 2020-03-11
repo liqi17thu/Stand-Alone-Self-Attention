@@ -1,7 +1,6 @@
-TRAIN:
-    MODEL:
-      NAME: 'SAResNet50'
+model:
+  name: 'SAResNet50'
 
-    DATASET:
-      NAME: 'CIFAR100'
-      IMAGE_SIZE: 32
+dataset:
+  name: 'CIFAR100'
+  image_size: 32

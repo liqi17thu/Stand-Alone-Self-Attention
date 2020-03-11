@@ -1,3 +1,2 @@
-TRAIN:
-  MODEL:
-    WITH_CONV: True
+model:
+  with_conv: True

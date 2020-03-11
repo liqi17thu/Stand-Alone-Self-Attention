@@ -1,5 +1,5 @@
-AUTO_RESUME: True
-TEST: True
-TRAIN:
-  MODEL:
-    PRE_TRAINED: True
+auto_resume: True
+test: True
+train:
+  model:
+    pre_trained: True

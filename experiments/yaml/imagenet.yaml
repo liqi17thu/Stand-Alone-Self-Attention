@@ -1,11 +1,12 @@
-TRAIN:
-  EPOCH: 300
-  MODEL:
-    NAME: 'SAResNet50'
-    STEM: 'imagenet_conv'
+train:
+  epoch: 300
 
-  DATASET:
-    NAME: 'imagenet'
-    TRAIN_DIR: './data/imagenet/train'
-    TEST_DIR: './data/imagenet/val'
-    IMAGE_SIZE: 224
+model:
+    name: 'SAResNet50'
+    stem: 'imagenet_conv'
+
+dataset:
+  name: 'imagenet'
+  train_dir: './data/imagenet/train'
+  test_dir: './data/imagenet/val'
+  image_size: 224

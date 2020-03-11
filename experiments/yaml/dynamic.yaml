@@ -1,3 +1,2 @@
-TRAIN:
-    MODEL:
-      NAME: 'DynamicResNet26'
+model:
+  name: 'DynamicResNet26'

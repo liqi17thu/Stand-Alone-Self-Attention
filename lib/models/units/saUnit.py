@@ -304,19 +304,17 @@ class SABottleneck(nn.Module):
         )
 
         padding = get_same_padding(kernel_size)
-        self.sa_conv = SAConv(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, encoding=encoding,
-                              temperture=temperture, logger=logger, cfg=cfg)
-        self.non_linear = nn.Sequential(
+        self.conv_2_1 = nn.Sequential(
+            nn.Conv2d(width, width, kernel_size=3, stride=self.stride, padding=1, bias=False),
             nn.BatchNorm2d(width),
             nn.ReLU(),
         )
 
-        if with_conv:
-            self.conv_2_2 = nn.Sequential(
-                nn.Conv2d(width, width, kernel_size=3, stride=self.stride, padding=1, bias=False),
-                nn.BatchNorm2d(width),
-                nn.ReLU(),
-            )
+        self.conv_2_2 = nn.Sequential(
+            nn.Conv2d(width, width, kernel_size=3, stride=self.stride, padding=1, bias=False),
+            nn.BatchNorm2d(width),
+            nn.ReLU(),
+        )
 
         self.conv3 = nn.Sequential(
             nn.Conv2d(width, self.expansion * out_channels, kernel_size=1, bias=False),
@@ -330,10 +328,6 @@ class SABottleneck(nn.Module):
                 nn.BatchNorm2d(self.expansion * out_channels)
             )
 
-    def conv_2_1(self, out, r):
-        out = self.sa_conv(out, r)
-        return self.non_linear(out)
-
     def forward(self, x, r=None):
         out = self.conv1(x)
 
@@ -343,11 +337,11 @@ class SABottleneck(nn.Module):
             else:
                 shake_config = (False, False, False)
             alpha, beta = get_alpha_beta(x.size(0), shake_config, x.device)
-            out1 = self.conv_2_1(out, r)
+            out1 = self.conv_2_1(out)
             out2 = self.conv_2_2(out)
             out = shake_function(out1, out2, alpha, beta)
         else:
-            out = self.conv_2_1(out, r)
+            out = self.conv_2_1(out)
 
         out = self.conv3(out)
 

@@ -3,4 +3,3 @@ dataset:
   train_dir: "data/CUB/base.json"
   test_dir: "data/CUB/val.json"
   image_size: 224
-  test_size: 224

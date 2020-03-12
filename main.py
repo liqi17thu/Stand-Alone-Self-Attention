@@ -9,6 +9,7 @@ import shutil
 from lib.data import *
 from lib.models.dynamicResnet import *
 from lib.models.saResnet import *
+from lib.models.saMobilenet import *
 from lib.core.train import train
 from lib.core.vaild import validate
 from lib.config import cfg
@@ -31,12 +32,15 @@ def main():
                                                            cfg.model.stem))
 
     print('Model Name: {0}'.format(cfg.model.name))
-    model = eval(cfg.model.name)(num_classes=num_classes,
-                                 heads=cfg.model.heads,
-                                 kernel_size=cfg.model.kernel,
-                                 stem=cfg.model.stem,
-                                 num_resblock=cfg.model.num_resblock,
-                                 attention_logger=attention_logger)
+    if cfg.model.name == "MobileNetV3":
+        model = MobileNetV3(n_class=num_classes, input_size=cfg.dataset.image_size, mode='large')
+    else:
+        model = eval(cfg.model.name)(num_classes=num_classes,
+                                     heads=cfg.model.heads,
+                                     kernel_size=cfg.model.kernel,
+                                     stem=cfg.model.stem,
+                                     num_resblock=cfg.model.num_resblock,
+                                     attention_logger=attention_logger)
 
     if cfg.model.pre_trained:
         filename = 'best_model_' + str(cfg.dataset.name) + '_' + \

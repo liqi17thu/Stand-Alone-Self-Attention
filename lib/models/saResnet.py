@@ -43,14 +43,14 @@ class SAResNet(nn.Module):
         else:
             if stem.split('_')[0] == 'cifar':
                 self.init = nn.Sequential(
-                    nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                    nn.BatchNorm2d(64),
+                    nn.Conv2d(3, 40, kernel_size=3, stride=1, padding=1, bias=False),
+                    nn.BatchNorm2d(40),
                     nn.ReLU(),
                 )
             else:
                 self.init = nn.Sequential(
-                    nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
-                    nn.BatchNorm2d(64),
+                    nn.Conv2d(3, 40, kernel_size=7, stride=2, padding=3, bias=False),
+                    nn.BatchNorm2d(40),
                     nn.ReLU(),
                     nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
                 )

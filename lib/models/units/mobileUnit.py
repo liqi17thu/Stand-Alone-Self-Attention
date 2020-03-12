@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from .activation import build_activation, Hswish, Hsigmoid
+from .activation import build_activation, Hswish
 from .utils import get_same_padding
 from .seUnit import SEModule
 from .saUnit import SAConv
@@ -14,16 +14,6 @@ class IdentityLayer(nn.Module):
 
     def forward(self, x):
         return x
-
-
-class ZeroLayer(nn.Module):
-
-    def __init__(self, stride):
-        super(ZeroLayer, self).__init__()
-        self.stride = stride
-
-    def forward(self, x):
-        raise ValueError
 
 
 class MobileBottleneck(nn.Module):
@@ -86,10 +76,9 @@ class MobileBottleneck(nn.Module):
 
 class MBInvertedConvLayer(nn.Module):
 
-    def __init__(self, in_channels, out_channels,
-                 kernel_size=3, stride=1, expand_ratio=6, mid_channels=None, act_func='relu6', use_se=False):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, expand_ratio=6,
+                 mid_channels=None, act_func='relu6', use_se=False):
         super(MBInvertedConvLayer, self).__init__()
-
         self.in_channels = in_channels
         self.out_channels = out_channels
 
@@ -99,20 +88,18 @@ class MBInvertedConvLayer(nn.Module):
         self.mid_channels = mid_channels
         self.act_func = act_func
         self.use_se = use_se
+        self.use_res_connect = stride == 1 and in_channels == out_channels
 
         if self.mid_channels is None:
             feature_dim = round(self.in_channels * self.expand_ratio)
         else:
             feature_dim = self.mid_channels
 
-        if self.expand_ratio == 1:
-            self.inverted_bottleneck = None
-        else:
-            self.inverted_bottleneck = nn.Sequential(
-                nn.Conv2d(self.in_channels, feature_dim, 1, 1, 0, bias=False),
-                nn.BatchNorm2d(feature_dim),
-                build_activation(self.act_func, inplace=True),
-            )
+        self.inverted_bottleneck = nn.Sequential(
+            nn.Conv2d(self.in_channels, feature_dim, 1, 1, 0, bias=False),
+            nn.BatchNorm2d(feature_dim),
+            build_activation(self.act_func, inplace=True),
+        )
 
         pad = get_same_padding(self.kernel_size)
         depth_conv_modules = [
@@ -130,26 +117,9 @@ class MBInvertedConvLayer(nn.Module):
         )
 
     def forward(self, x):
-        if self.inverted_bottleneck:
-            x = self.inverted_bottleneck(x)
-        x = self.depth_conv(x)
-        x = self.point_linear(x)
-        return x
-
-
-class MobileInvertedResidualBlock(nn.Module):
-
-    def __init__(self, mobile_inverted_conv, shortcut):
-        super(MobileInvertedResidualBlock, self).__init__()
-
-        self.mobile_inverted_conv = mobile_inverted_conv
-        self.shortcut = shortcut
-
-    def forward(self, x):
-        if self.mobile_inverted_conv is None or isinstance(self.mobile_inverted_conv, ZeroLayer):
-            res = x
-        elif self.shortcut is None or isinstance(self.shortcut, ZeroLayer):
-            res = self.mobile_inverted_conv(x)
-        else:
-            res = self.mobile_inverted_conv(x) + self.shortcut(x)
-        return res
+        out = self.inverted_bottleneck(x)
+        out = self.depth_conv(out)
+        out = self.point_linear(out)
+        if self.use_res_connect:
+            out += x
+        return out

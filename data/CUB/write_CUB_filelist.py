@@ -7,7 +7,7 @@ import numpy as np
 
 data_path = join(os.getcwd(), 'CUB_200_2011/images')
 savedir = './'
-dataset_list = ['all', 'base', 'val', 'novel']
+dataset_list = ['train', 'test', 'all', 'base', 'val', 'novel']
 
 folder_list = [f for f in listdir(data_path) if isdir(join(data_path, f))]
 folder_list.sort()
@@ -25,21 +25,29 @@ for dataset in dataset_list:
     file_list = []
     label_list = []
     for i, classfile_list in enumerate(classfile_list_all):
-        if dataset == 'all':
+        sep = int(len(classfile_list)*0.8)
+        if dataset == 'train':
+            file_list = file_list + classfile_list[:sep]
+            label_list = label_list + np.repeat(i, sep).tolist()
+        elif dataset == 'test':
+            file_list = file_list + classfile_list[sep:]
+            label_list = label_list + np.repeat(i, len(classfile_list)-sep).tolist()
+        elif dataset == 'all':
             file_list = file_list + classfile_list
             label_list = label_list + np.repeat(i, len(classfile_list)).tolist()
-        if dataset == 'base':
+        elif dataset == 'base':
             if i % 2 == 0:
                 file_list = file_list + classfile_list
                 label_list = label_list + np.repeat(i, len(classfile_list)).tolist()
-        if dataset == 'val':
+        elif dataset == 'val':
             if i % 4 == 1:
                 file_list = file_list + classfile_list
                 label_list = label_list + np.repeat(i, len(classfile_list)).tolist()
-        if dataset == 'novel':
+        elif dataset == 'novel':
             if i % 4 == 3:
                 file_list = file_list + classfile_list
                 label_list = label_list + np.repeat(i, len(classfile_list)).tolist()
+
 
     fo = open(savedir + dataset + ".json", "w")
     fo.write('{"label_names": [')

@@ -46,7 +46,7 @@ def get_loader(file_list, batch_size, train=True):
         size = int(cfg.dataset.image_size * 1.15)
         transform = transforms.Compose([
             transforms.Resize((size, size)),
-            transforms.CenterCrop(cfg.DATASET.TEST_SIZE),
+            transforms.CenterCrop(cfg.dataset.image_size),
             transforms.ToTensor(),
             normalize,
         ])
@@ -56,7 +56,7 @@ def get_loader(file_list, batch_size, train=True):
     return loader
 
 
-def CUB(cfg):
+def CUB():
     train_loader = get_loader(cfg.dataset.train_dir, cfg.dataset.batch_size, True)
     test_loader = get_loader(cfg.dataset.test_dir, cfg.dataset.batch_size, False)
     return train_loader, test_loader, 200

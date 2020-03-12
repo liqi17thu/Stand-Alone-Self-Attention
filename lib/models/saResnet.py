@@ -8,6 +8,13 @@ from .units.resUnit import Bottleneck, BasicBlock
 from lib.config import cfg
 
 
+def conv_1x1_bn(inp, oup, conv_layer=nn.Conv2d, norm_layer=nn.BatchNorm2d, nlin_layer=nn.ReLU):
+    return nn.Sequential(
+        conv_layer(inp, oup, 1, 1, 0, bias=False),
+        norm_layer(oup),
+        nlin_layer(inplace=True)
+    )
+
 class SAResNet(nn.Module):
     def __init__(self, block, num_blocks, num_classes, heads, kernel_size, stem, num_resblock, logger):
         super(SAResNet, self).__init__()
@@ -53,8 +60,15 @@ class SAResNet(nn.Module):
         self.layer3 = self._make_layer(block[2], 112, num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block[3], 160, num_blocks[3], stride=2)
         self.layers = nn.Sequential(self.layer1, self.layer2, self.layer3, self.layer4)
-        self.dense = nn.Linear(512 * block[3].expansion, num_classes)
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.features = []
+        self.features.append(conv_1x1_bn(160, 960))
+        self.features.append(nn.AdaptiveAvgPool2d(1))
+        self.features.append(nn.Conv2d(960, 1280, 1, 1, 0))
+        self.features = nn.Sequential(*self.features)
+        self.classifier = nn.Sequential(
+            nn.Dropout(p=0.8),    # refer to paper section 6
+            nn.Linear(1280, num_classes),
+        )
 
         if cfg.model.encoding == "xl":
             self.r = nn.Parameter(torch.randn(1, self.r_dim, self.kernel_size, self.kernel_size), requires_grad=True)
@@ -91,9 +105,9 @@ class SAResNet(nn.Module):
                     self.logger.info(f"block {j}")
                 out = layer(out, self.r)
 
-        out = self.avgpool(out)
-        out = out.view(out.size(0), -1)
-        out = self.dense(out)
+        out = self.feature(out)
+        out = out.mean(3).mean(2)
+        out = self.classifier(out)
 
         return out
 

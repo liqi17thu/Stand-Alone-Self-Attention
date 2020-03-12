@@ -33,7 +33,7 @@ class SAConv(nn.Module):
 
         self.reset_parameters()
 
-    def forward(self, x, r):
+    def forward(self, x, r=None):
         batch, channels, height, width = x.size()
 
         padded_x = F.pad(x, [self.padding, self.padding, self.padding, self.padding])

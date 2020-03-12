@@ -34,7 +34,7 @@ def imagenet():
         cfg.dataset.test_dir,
         transforms.Compose([
             transforms.Resize(cfg.dataset.test_resize),
-            transforms.CenterCrop(cfg.dataset.test_size),
+            transforms.CenterCrop(cfg.dataset.image_size),
             ToBGRTensor() if cfg.dataset.bgr else transforms.ToTensor(),
             normalize,
         ]))

@@ -27,7 +27,7 @@ class ZeroLayer(nn.Module):
 
 
 class MobileBottleneck(nn.Module):
-    def __init__(self, inp, oup, kernel, stride, exp, se=False, nl='RE', sa=False):
+    def __init__(self, inp, oup, kernel, stride, exp, se=False, nl='RE', sa=False, logger=None):
         super(MobileBottleneck, self).__init__()
         assert stride in [1, 2]
         assert kernel in [3, 5]
@@ -54,7 +54,7 @@ class MobileBottleneck(nn.Module):
                 norm_layer(exp),
                 nlin_layer(inplace=True),
                 # dw
-                SAConv(exp, exp, kernel, stride, padding, cfg.model.heads, logger=cfg.attention_logger),
+                SAConv(exp, exp, kernel, stride, padding, cfg.model.heads, logger=logger),
                 conv_layer(exp, exp, kernel, stride, padding, groups=exp, bias=False),
                 norm_layer(exp),
                 SELayer(exp),

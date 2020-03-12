@@ -23,7 +23,6 @@ def main():
     else:
         logger = get_logger(os.path.join(cfg.save_path, 'train.log'))
     attention_logger = get_attention_logger(os.path.join(cfg.save_path, 'attention.log'))
-    cfg.attention_logger = attention_logger
     writer = SummaryWriter(cfg.log_dir)
 
     train_loader, test_loader, num_classes = eval(cfg.dataset.name)()
@@ -34,7 +33,7 @@ def main():
 
     print('Model Name: {0}'.format(cfg.model.name))
     if cfg.model.name == "MobileNetV3":
-        model = MobileNetV3(n_class=num_classes, input_size=cfg.dataset.image_size, mode='large')
+        model = MobileNetV3(n_class=num_classes, input_size=cfg.dataset.image_size, mode='large', logger=attention_logger)
     else:
         model = eval(cfg.model.name)(num_classes=num_classes,
                                      heads=cfg.model.heads,

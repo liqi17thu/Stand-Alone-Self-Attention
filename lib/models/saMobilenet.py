@@ -26,7 +26,7 @@ def conv_1x1_bn(inp, oup, conv_layer=nn.Conv2d, norm_layer=nn.BatchNorm2d, nlin_
 
 
 class MobileNetV3(nn.Module):
-    def __init__(self, n_class=1000, input_size=224, dropout=0.8, mode='small', width_mult=1.0):
+    def __init__(self, n_class=1000, input_size=224, dropout=0.8, mode='small', width_mult=1.0, logger=None):
         super(MobileNetV3, self).__init__()
         input_channel = 16
         last_channel = 1280
@@ -79,7 +79,7 @@ class MobileNetV3(nn.Module):
         for k, exp, c, se, nl, s, sa in mobile_setting:
             output_channel = make_divisible(c * width_mult)
             exp_channel = make_divisible(exp * width_mult)
-            self.features.append(MobileBottleneck(input_channel, output_channel, k, s, exp_channel, se, nl, sa))
+            self.features.append(MobileBottleneck(input_channel, output_channel, k, s, exp_channel, se, nl, sa, logger))
             input_channel = output_channel
 
         # building last several layers
@@ -132,10 +132,3 @@ class MobileNetV3(nn.Module):
                     nn.init.zeros_(m.bias)
 
 
-def mobilenetv3(pretrained=False, **kwargs):
-    model = MobileNetV3(**kwargs)
-    if pretrained:
-        state_dict = torch.load('mobilenetv3_small_67.4.pth.tar')
-        model.load_state_dict(state_dict, strict=True)
-        # raise NotImplementedError
-    return model

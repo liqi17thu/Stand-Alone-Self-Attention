@@ -46,7 +46,7 @@ def get_loader(file_list, batch_size, train=True):
         size = int(cfg.dataset.image_size * 1.15)
         transform = transforms.Compose([
             transforms.Resize((size, size)),
-            transforms.CenterCrop(cfg.DATASET.TEST_SIZE),
+            transforms.CenterCrop(cfg.dataset.image_size),
             transforms.ToTensor(),
             normalize,
         ])

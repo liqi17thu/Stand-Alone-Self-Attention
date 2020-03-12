@@ -23,6 +23,7 @@ def main():
     else:
         logger = get_logger(os.path.join(cfg.save_path, 'train.log'))
     attention_logger = get_attention_logger(os.path.join(cfg.save_path, 'attention.log'))
+    cfg.attention_logger = attention_logger
     writer = SummaryWriter(cfg.log_dir)
 
     train_loader, test_loader, num_classes = eval(cfg.dataset.name)()

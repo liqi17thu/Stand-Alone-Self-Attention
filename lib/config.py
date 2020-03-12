@@ -6,7 +6,7 @@ import shutil
 
 from yacs.config import CfgNode
 
-from .utils import check_dir
+from lib.utils import check_dir
 
 cfg = CfgNode(dict(
     save_path='./experiments',
@@ -93,5 +93,7 @@ elif not cfg.test:
 
 cfg.ckp_dir = check_dir(join(cfg.save_path, 'checkpoints'))
 cfg.log_dir = check_dir(join(cfg.save_path, 'runs'))
+
+print(cfg.model.name)
 
 

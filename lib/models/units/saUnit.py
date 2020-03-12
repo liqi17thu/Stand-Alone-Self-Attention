@@ -25,7 +25,7 @@ class SAConv(nn.Module):
         assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
         if self.encoding != 'none':
-            self.encoder = PositionalEncoding(out_channels, kernel_size, heads, bias, encoding, r_dim)
+            self.encoder = PositionalEncoding(out_channels, kernel_size, heads, bias, self.encoding, r_dim)
 
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, stride=stride, groups=heads)
@@ -33,7 +33,7 @@ class SAConv(nn.Module):
 
         self.reset_parameters()
 
-    def forward(self, x, r):
+    def forward(self, x, r=None):
         batch, channels, height, width = x.size()
 
         padded_x = F.pad(x, [self.padding, self.padding, self.padding, self.padding])

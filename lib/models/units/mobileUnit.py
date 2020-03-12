@@ -3,6 +3,8 @@ import torch.nn as nn
 from .activation import build_activation, Hswish, Hsigmoid
 from .utils import get_same_padding
 from .seUnit import SEModule
+from .saUnit import SAConv
+from lib.config import cfg
 
 
 class IdentityLayer(nn.Module):
@@ -22,6 +24,66 @@ class ZeroLayer(nn.Module):
 
     def forward(self, x):
         raise ValueError
+
+
+class MobileBottleneck(nn.Module):
+    def __init__(self, inp, oup, kernel, stride, exp, se=False, nl='RE', sa=False):
+        super(MobileBottleneck, self).__init__()
+        assert stride in [1, 2]
+        assert kernel in [3, 5]
+        padding = (kernel - 1) // 2
+        self.use_res_connect = stride == 1 and inp == oup
+
+        conv_layer = nn.Conv2d
+        norm_layer = nn.BatchNorm2d
+        if nl == 'RE':
+            nlin_layer = nn.ReLU # or ReLU6
+        elif nl == 'HS':
+            nlin_layer = Hswish
+        else:
+            raise NotImplementedError
+        if se:
+            SELayer = SEModule
+        else:
+            SELayer = IdentityLayer
+
+        if sa:
+            self.conv = nn.Sequential(
+                # pw
+                conv_layer(inp, exp, 1, 1, 0, bias=False),
+                norm_layer(exp),
+                nlin_layer(inplace=True),
+                # dw
+                SAConv(exp, exp, kernel, stride, padding, cfg.model.heads, logger=cfg.attention_logger),
+                conv_layer(exp, exp, kernel, stride, padding, groups=exp, bias=False),
+                norm_layer(exp),
+                SELayer(exp),
+                nlin_layer(inplace=True),
+                # pw-linear
+                conv_layer(exp, oup, 1, 1, 0, bias=False),
+                norm_layer(oup),
+            )
+        else:
+            self.conv = nn.Sequential(
+                # pw
+                conv_layer(inp, exp, 1, 1, 0, bias=False),
+                norm_layer(exp),
+                nlin_layer(inplace=True),
+                # dw
+                conv_layer(exp, exp, kernel, stride, padding, groups=exp, bias=False),
+                norm_layer(exp),
+                SELayer(exp),
+                nlin_layer(inplace=True),
+                # pw-linear
+                conv_layer(exp, oup, 1, 1, 0, bias=False),
+                norm_layer(oup),
+            )
+
+    def forward(self, x):
+        if self.use_res_connect:
+            return x + self.conv(x)
+        else:
+            return self.conv(x)
 
 
 class MBInvertedConvLayer(nn.Module):
@@ -93,46 +155,3 @@ class MobileInvertedResidualBlock(nn.Module):
         else:
             res = self.mobile_inverted_conv(x) + self.shortcut(x)
         return res
-
-
-class MobileBottleneck(nn.Module):
-    def __init__(self, inp, oup, kernel, stride, exp, se=False, nl='RE'):
-        super(MobileBottleneck, self).__init__()
-        assert stride in [1, 2]
-        assert kernel in [3, 5]
-        padding = (kernel - 1) // 2
-        self.use_res_connect = stride == 1 and inp == oup
-
-        conv_layer = nn.Conv2d
-        norm_layer = nn.BatchNorm2d
-        if nl == 'RE':
-            nlin_layer = nn.ReLU # or ReLU6
-        elif nl == 'HS':
-            nlin_layer = Hswish
-        else:
-            raise NotImplementedError
-        if se:
-            SELayer = SEModule
-        else:
-            SELayer = IdentityLayer
-
-        self.conv = nn.Sequential(
-            # pw
-            conv_layer(inp, exp, 1, 1, 0, bias=False),
-            norm_layer(exp),
-            nlin_layer(inplace=True),
-            # dw
-            conv_layer(exp, exp, kernel, stride, padding, groups=exp, bias=False),
-            norm_layer(exp),
-            SELayer(exp),
-            nlin_layer(inplace=True),
-            # pw-linear
-            conv_layer(exp, oup, 1, 1, 0, bias=False),
-            norm_layer(oup),
-        )
-
-    def forward(self, x):
-        if self.use_res_connect:
-            return x + self.conv(x)
-        else:
-            return self.conv(x)

@@ -33,22 +33,22 @@ class MobileNetV3(nn.Module):
         if mode == 'large':
             # refer to Table 1 in paper
             mobile_setting = [
-                # k, exp, c,  se,     nl,  s,
-                [3, 16,  16,  False, 'RE', 1],
-                [3, 64,  24,  False, 'RE', 2],
-                [3, 72,  24,  False, 'RE', 1],
-                [5, 72,  40,  True,  'RE', 2],
-                [5, 120, 40,  True,  'RE', 1],
-                [5, 120, 40,  True,  'RE', 1],
-                [3, 240, 80,  False, 'HS', 2],
-                [3, 200, 80,  False, 'HS', 1],
-                [3, 184, 80,  False, 'HS', 1],
-                [3, 184, 80,  False, 'HS', 1],
-                [3, 480, 112, True,  'HS', 1],
-                [3, 672, 112, True,  'HS', 1],
-                [5, 672, 160, True,  'HS', 2],
-                [5, 960, 160, True,  'HS', 1],
-                [5, 960, 160, True,  'HS', 1],
+                # k, exp, c,  se,     nl,  s, sa
+                [3, 16,  16,  False, 'RE', 1, False],
+                [3, 64,  24,  False, 'RE', 2, False],
+                [3, 72,  24,  False, 'RE', 1, False],
+                [5, 72,  40,  True,  'RE', 2, False],
+                [5, 120, 40,  True,  'RE', 1, False],
+                [5, 120, 40,  True,  'RE', 1, False],
+                [3, 240, 80,  False, 'HS', 2, True],
+                [3, 200, 80,  False, 'HS', 1, True],
+                [3, 184, 80,  False, 'HS', 1, True],
+                [3, 184, 80,  False, 'HS', 1, True],
+                [3, 480, 112, True,  'HS', 1, True],
+                [3, 672, 112, True,  'HS', 1, True],
+                [5, 672, 160, True,  'HS', 2, True],
+                [5, 960, 160, True,  'HS', 1, True],
+                [5, 960, 160, True,  'HS', 1, True],
             ]
         elif mode == 'small':
             # refer to Table 2 in paper
@@ -76,10 +76,10 @@ class MobileNetV3(nn.Module):
         self.classifier = []
 
         # building mobile blocks
-        for k, exp, c, se, nl, s in mobile_setting:
+        for k, exp, c, se, nl, s, sa in mobile_setting:
             output_channel = make_divisible(c * width_mult)
             exp_channel = make_divisible(exp * width_mult)
-            self.features.append(MobileBottleneck(input_channel, output_channel, k, s, exp_channel, se, nl))
+            self.features.append(MobileBottleneck(input_channel, output_channel, k, s, exp_channel, se, nl, sa))
             input_channel = output_channel
 
         # building last several layers

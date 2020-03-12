@@ -17,6 +17,7 @@ class SAResNet(nn.Module):
         self.num_resblock = num_resblock
         self.logger = logger
         self.r_dim = cfg.model.r_dim
+        self.encoding = cfg.model.encoding
 
         if stem.split('_')[1] == 'sa':
             if stem.split('_')[0] == 'cifar':
@@ -83,10 +84,10 @@ class SAResNet(nn.Module):
         for i in range(self.num_resblock):
             out = self.layers[i](out)
         for i in range(self.num_resblock, 4):
-            if not self.training and x.get_device() == 1 and self.cfg.disp_attention:
+            if not self.training and x.get_device() == 1 and cfg.disp_attention:
                 self.logger.info(f"layer {i+1}")
             for (j, layer) in enumerate(self.layers[i]):
-                if not self.training and x.get_device() == 1 and self.cfg.disp_attention:
+                if not self.training and x.get_device() == 1 and cfg.disp_attention:
                     self.logger.info(f"block {j}")
                 out = layer(out, self.r)
 

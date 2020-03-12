@@ -5,7 +5,7 @@ from lib.config import cfg
 
 
 def cifar10():
-    print('Load Dataset :: {}'.format(cfg.TRAIN.DATASET.NAME))
+    print('Load Dataset :: {}'.format(cfg.dataset.name))
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),

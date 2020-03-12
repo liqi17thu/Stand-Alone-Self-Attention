@@ -73,7 +73,7 @@ def get_model_parameters(model):
     return total_parameters
 
 
-def make_divisible(v, divisor, min_val=None):
+def make_divisible(v, divisor=8, min_val=None):
     """
     This function is taken from the original tf repo.
     It ensures that all layers have a channel number that is divisible by 8

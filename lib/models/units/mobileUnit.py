@@ -7,7 +7,7 @@ from .seUnit import SEModule
 
 class IdentityLayer(nn.Module):
 
-    def __init__(self):
+    def __init__(self, channel):
         super(IdentityLayer, self).__init__()
 
     def forward(self, x):

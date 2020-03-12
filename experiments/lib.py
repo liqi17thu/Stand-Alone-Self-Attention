@@ -7,17 +7,17 @@ def get_attention(path, epoch, layer, block, head, height, width, kernel):
     i = 0
     length = len(text)
     while i < length:
-        if f'Test: Epoch {epoch}' in text[i]:
+        if f'Epoch {epoch}' in text[i]:
             break
         i += 1
     while i  < length:
-        if f'layer{layer}' in text[i]:
+        if f'layer {layer}' in text[i]:
             break
         i += 1
-#    while i < length:
-#        if f'block {block}' in text[i]:
-#            break
-#        i += 1
+    while i < length:
+        if f'block {block}' in text[i]:
+            break
+        i += 1
     while i < length:
         if f'head {head}' in text[i]:
             break

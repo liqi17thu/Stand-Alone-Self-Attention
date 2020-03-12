@@ -25,7 +25,7 @@ class SAConv(nn.Module):
         assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
         if self.encoding != 'none':
-            self.encoder = PositionalEncoding(out_channels, kernel_size, heads, bias, encoding, r_dim)
+            self.encoder = PositionalEncoding(out_channels, kernel_size, heads, bias, self.encoding, r_dim)
 
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
         self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, stride=stride, groups=heads)
@@ -60,11 +60,11 @@ class SAConv(nn.Module):
             out = q_out * k_out + q_out * r_out + u * k_out + v * r_out
         else:
             out = q_out * k_out
-        out = out.sum(dim=2, keepdim=True) * self.temperture
+        out = out.sum(dim=2, keepdim=True) * self.temperature
         out = F.softmax(out, dim=-1)
 
         # print attention info
-        if not self.training and x.get_device() == 1 and self.cfg.disp_attention:
+        if not self.training and x.get_device() == 1 and cfg.disp_attention:
             for head in range(self.heads):
                 self.logger.info("head {}".format(head))
                 for h in range(height // self.stride):
@@ -133,7 +133,7 @@ class SAFull(nn.Module):
 
         # print attention info
 
-        if not self.training and x.get_device() == 1 and self.cfg.disp_attention:
+        if not self.training and x.get_device() == 1 and cfg.disp_attention:
             temp = out.view(batch, self.heads, height // self.stride, width // self.stride, height, width)
             for head in range(self.heads):
                 self.logger.info("head {}".format(head))
@@ -186,11 +186,11 @@ class SAPooling(nn.Module):
         q_out = self.query.repeat(batch, 1, 1)
         q_out = q_out.view(batch, self.heads, self.channels // self.heads, 1)
 
-        out = (q_out * k_out).sum(dim=2, keepdim=True) * self.temperture
+        out = (q_out * k_out).sum(dim=2, keepdim=True) * self.temperature
         out = F.softmax(out, dim=-1)
 
         # print attention info
-        if not self.training and x.get_device() == 1 and self.cfg.disp_attention:
+        if not self.training and x.get_device() == 1 and cfg.disp_attention:
             self.logger.info("Pooling:")
             for head in range(self.heads):
                 self.logger.info("head {}".format(head))

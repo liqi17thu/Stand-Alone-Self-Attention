@@ -22,6 +22,7 @@ cfg = CfgNode(dict(
         stem='cifar_conv',
         heads=8,
         kernel=7,
+        expansion=4,
         pre_trained=False,
         num_resblock=2,
         with_conv=False,

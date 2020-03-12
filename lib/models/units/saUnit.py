@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
 
-
 from .utils import get_same_padding
 from .postionalEncoding import PositionalEncoding, SinePositionalEncoding
 from .shake_shake import get_alpha_beta, shake_function
@@ -11,7 +10,8 @@ from lib.config import cfg
 
 
 class SAConv(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, r_dim=256, logger=None):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, r_dim=256,
+                 logger=None):
         super(SAConv, self).__init__()
         self.out_channels = out_channels
         self.kernel_size = kernel_size
@@ -52,9 +52,12 @@ class SAConv(nn.Module):
         else:
             k_out = self.encoder(k_out)
 
-        k_out = k_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride, -1)
-        v_out = v_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride, -1)
-        q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride, 1)
+        k_out = k_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride,
+                                        width // self.stride, -1)
+        v_out = v_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride,
+                                        width // self.stride, -1)
+        q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride,
+                           width // self.stride, 1)
 
         if self.encoding == 'xl':
             out = q_out * k_out + q_out * r_out + u * k_out + v * r_out
@@ -72,7 +75,8 @@ class SAConv(nn.Module):
                         self.logger.info("height {} width {}".format(h, w))
                         for k in range(self.kernel_size):
                             loggerInfo = "{:.3f} " * self.kernel_size
-                            self.logger.info(loggerInfo.format(*out[0][head][0][h][w][k*self.kernel_size:(k+1)*self.kernel_size].tolist()))
+                            self.logger.info(loggerInfo.format(
+                                *out[0][head][0][h][w][k * self.kernel_size:(k + 1) * self.kernel_size].tolist()))
 
         out = (out * v_out).sum(dim=-1)
         out = out.view(batch, -1, height // self.stride, width // self.stride)
@@ -117,7 +121,8 @@ class SAFull(nn.Module):
         k_out = self.encoder(k_out)
         k_out = k_out.view(batch, self.out_channels, height, width)
 
-        q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride, width // self.stride)
+        q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride,
+                           width // self.stride)
         q_out = q_out.permute(0, 1, 3, 4, 2).contiguous()
         q_out = q_out.view(batch * self.heads, -1, self.out_channels // self.heads)
 
@@ -196,7 +201,7 @@ class SAPooling(nn.Module):
                 self.logger.info("head {}".format(head))
                 for h in range(height):
                     loggerInfo = "{:.3f} " * width
-                    self.logger.info(loggerInfo.format(*out[0][head][0][h*width:(h+1)*width].tolist()))
+                    self.logger.info(loggerInfo.format(*out[0][head][0][h * width:(h + 1) * width].tolist()))
 
         out = (out * v_out).sum(dim=-1)
         out = out.view(batch, self.channels, 1, 1)
@@ -208,6 +213,7 @@ class SAPooling(nn.Module):
         # init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
 
         init.normal_(self.query, 0, 1)
+
 
 class SAStem(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, groups=1, m=4, bias=False):
@@ -279,7 +285,9 @@ class SAStem(nn.Module):
 
 class SABasic(nn.Module):
     expansion = 1
-    def __init__(self, in_channels, out_channels, stride, kernel_size, heads=8, with_conv=False, r_dim=256, logger=None):
+
+    def __init__(self, in_channels, out_channels, stride, kernel_size,
+                 heads=8, with_conv=False, r_dim=256, logger=None):
         super(SABasic, self).__init__()
         self.stride = stride
         self.heads = heads
@@ -287,7 +295,8 @@ class SABasic(nn.Module):
         self.with_conv = with_conv
 
         padding = get_same_padding(kernel_size)
-        self.sa_conv_1 = SAConv(in_channels, out_channels, kernel_size, stride, padding, heads, r_dim=r_dim, logger=logger)
+        self.sa_conv_1 = SAConv(in_channels, out_channels, kernel_size, stride, padding, heads, r_dim=r_dim,
+                                logger=logger)
         self.bn1 = nn.BatchNorm2d(out_channels)
 
         self.sa_conv_2 = SAConv(out_channels, out_channels, kernel_size, 1, padding, heads, r_dim=r_dim, logger=logger)
@@ -343,14 +352,15 @@ class SABasic(nn.Module):
 
 
 class SABottleneck(nn.Module):
-    expansion = 4
 
-    def __init__(self, in_channels, out_channels, stride, kernel_size, groups=1, base_width=64, heads=8, r_dim=256, logger=None):
+    def __init__(self, in_channels, out_channels, stride, kernel_size, groups=1, expansion=4,
+                 base_width=64, heads=8, r_dim=256, logger=None):
         super(SABottleneck, self).__init__()
         self.stride = stride
         self.heads = heads
         self.kernel_size = kernel_size
         self.with_conv = cfg.model.with_conv
+        self.expansion = expansion
 
         width = int(out_channels * (base_width / 64.)) * groups
 

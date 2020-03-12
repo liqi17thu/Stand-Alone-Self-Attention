@@ -56,13 +56,13 @@ class BasicBlock(nn.Module):
 
 
 class Bottleneck(nn.Module):
-    expansion = 4
     __constants__ = ['downsample']
 
-    def __init__(self, inplanes, planes, stride=1, groups=1,
+    def __init__(self, inplanes, planes, stride=1, groups=1, expansion=4,
                  base_width=64, dilation=1, norm_layer=None):
         super(Bottleneck, self).__init__()
         self.stride = stride
+        self.expansion = expansion
         width = int(planes * (base_width / 64.)) * groups
 
         if norm_layer is None:

@@ -30,7 +30,6 @@ class MobileBottleneck(nn.Module):
     def __init__(self, inp, oup, kernel, stride, exp, se=False, nl='RE', sa=False, logger=None):
         super(MobileBottleneck, self).__init__()
         assert stride in [1, 2]
-        assert kernel in [3, 5]
         padding = (kernel - 1) // 2
         self.use_res_connect = stride == 1 and inp == oup
 
@@ -55,7 +54,6 @@ class MobileBottleneck(nn.Module):
                 nlin_layer(inplace=True),
                 # dw
                 SAConv(exp, exp, kernel, stride, padding, cfg.model.heads, logger=logger),
-                conv_layer(exp, exp, kernel, stride, padding, groups=exp, bias=False),
                 norm_layer(exp),
                 SELayer(exp),
                 nlin_layer(inplace=True),

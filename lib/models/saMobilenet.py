@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-__all__ = ['MobileNetV3', 'mobilenetv3']
+__all__ = ['MobileNetV3']
 
 
 from .units.activation import Hswish

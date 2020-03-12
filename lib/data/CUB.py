@@ -56,7 +56,7 @@ def get_loader(file_list, batch_size, train=True):
     return loader
 
 
-def CUB(cfg):
+def CUB():
     train_loader = get_loader(cfg.dataset.train_dir, cfg.dataset.batch_size, True)
     test_loader = get_loader(cfg.dataset.test_dir, cfg.dataset.batch_size, False)
     return train_loader, test_loader, 200

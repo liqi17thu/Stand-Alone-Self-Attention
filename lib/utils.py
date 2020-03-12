@@ -93,6 +93,15 @@ def make_divisible(v, divisor=8, min_val=None):
     return new_v
 
 
+def int2list(val, repeat_time=1):
+    if isinstance(val, list) or isinstance(val, np.ndarray):
+        return val
+    elif isinstance(val, tuple):
+        return list(val)
+    else:
+        return [val for _ in range(repeat_time)]
+
+
 def get_logger(file_path):
     """ Make python logger """
     logger = logging.getLogger("train")

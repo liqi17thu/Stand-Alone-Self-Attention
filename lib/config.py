@@ -43,6 +43,7 @@ cfg = CfgNode(dict(
         std=[0.229, 0.224, 0.225],
         batch_size=50,
         image_size=32,
+        test_resize=256,
         workers=8,
         use_aa=True,
         bgr=False,

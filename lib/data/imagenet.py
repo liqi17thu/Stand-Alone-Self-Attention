@@ -34,17 +34,17 @@ def imagenet():
         cfg.dataset.test_dir,
         transforms.Compose([
             transforms.Resize(cfg.dataset.test_resize),
-            transforms.CenterCrop(cfg.dataset.test_size),
+            transforms.CenterCrop(cfg.dataset.image_size),
             ToBGRTensor() if cfg.dataset.bgr else transforms.ToTensor(),
             normalize,
         ]))
 
-    train_loader = torch.utils.data.dataloader(
+    train_loader = torch.utils.data.DataLoader(
         train_data, batch_size=cfg.dataset.batch_size,
         shuffle=True,
         pin_memory=True, num_workers=cfg.dataset.workers)
 
-    test_loader = torch.utils.data.dataloader(
+    test_loader = torch.utils.data.DataLoader(
         test_data, batch_size=cfg.dataset.batch_size,
         shuffle=False,
         pin_memory=True, num_workers=cfg.dataset.workers)

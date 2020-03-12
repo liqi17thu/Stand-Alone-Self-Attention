@@ -60,29 +60,30 @@ class Bottleneck(nn.Module):
     __constants__ = ['downsample']
 
     def __init__(self, inplanes, planes, stride=1, groups=1,
-                 base_width=64, dilation=1, norm_layer=None):
+                 multiplier=6, dilation=1, norm_layer=None):
         super(Bottleneck, self).__init__()
         self.stride = stride
-        width = int(planes * (base_width / 64.)) * groups
+
+        mid_width = multiplier * planes
 
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         self.relu = nn.ReLU(inplace=True)
         # Both self.conv2 and self.downsample layers downsample the input when stride != 1
-        self.conv1 = conv1x1(inplanes, width)
-        self.bn1 = norm_layer(width)
+        self.conv1 = conv1x1(inplanes, mid_width)
+        self.bn1 = norm_layer(mid_width)
 
-        self.conv2 = conv3x3(width, width, stride, groups, dilation)
-        self.bn2 = norm_layer(width)
+        self.conv2 = conv3x3(mid_width, mid_width, stride, groups, dilation)
+        self.bn2 = norm_layer(mid_width)
 
-        self.conv3 = conv1x1(width, planes * self.expansion)
-        self.bn3 = norm_layer(planes * self.expansion)
+        self.conv3 = conv1x1(mid_width, planes)
+        self.bn3 = norm_layer(planes)
 
         self.shortcut = nn.Sequential()
-        if stride != 1 or inplanes != self.expansion * planes:
+        if stride != 1 or inplanes != planes:
             self.shortcut = nn.Sequential(
-                nn.Conv2d(inplanes, self.expansion * planes, kernel_size=1, stride=stride, bias=False),
-                norm_layer(self.expansion * planes)
+                nn.Conv2d(inplanes, planes, kernel_size=1, stride=stride, bias=False),
+                norm_layer(planes)
             )
 
     def forward(self, x):

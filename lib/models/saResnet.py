@@ -11,7 +11,7 @@ from lib.config import cfg
 class SAResNet(nn.Module):
     def __init__(self, block, num_blocks, num_classes, heads, kernel_size, stem, num_resblock, logger):
         super(SAResNet, self).__init__()
-        self.in_places = 64
+        self.in_places = 40
         self.heads = heads
         self.kernel_size = kernel_size
         self.num_resblock = num_resblock
@@ -22,13 +22,13 @@ class SAResNet(nn.Module):
         if stem.split('_')[1] == 'sa':
             if stem.split('_')[0] == 'cifar':
                 self.init = nn.Sequential(
-                    SAStem(in_channels=3, out_channels=64, kernel_size=4, stride=1, padding=2, groups=1),
+                    SAStem(in_channels=3, out_channels=40, kernel_size=4, stride=1, padding=2, groups=1),
                     nn.BatchNorm2d(64),
                     nn.ReLU(),
                 )
             else:
                 self.init = nn.Sequential(
-                    SAStem(in_channels=3, out_channels=64, kernel_size=4, stride=1, padding=2, groups=1),
+                    SAStem(in_channels=3, out_channels=40, kernel_size=4, stride=1, padding=2, groups=1),
                     nn.BatchNorm2d(64),
                     nn.ReLU(),
                     nn.MaxPool2d(4, 4)
@@ -48,10 +48,10 @@ class SAResNet(nn.Module):
                     nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
                 )
 
-        self.layer1 = self._make_layer(block[0], 64, num_blocks[0], stride=1)
-        self.layer2 = self._make_layer(block[1], 128, num_blocks[1], stride=2)
-        self.layer3 = self._make_layer(block[2], 256, num_blocks[2], stride=2)
-        self.layer4 = self._make_layer(block[3], 512, num_blocks[3], stride=2)
+        self.layer1 = self._make_layer(block[0], 40, num_blocks[0], stride=1)
+        self.layer2 = self._make_layer(block[1], 80, num_blocks[1], stride=2)
+        self.layer3 = self._make_layer(block[2], 112, num_blocks[2], stride=2)
+        self.layer4 = self._make_layer(block[3], 160, num_blocks[3], stride=2)
         self.layers = nn.Sequential(self.layer1, self.layer2, self.layer3, self.layer4)
         self.dense = nn.Linear(512 * block[3].expansion, num_classes)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
@@ -76,7 +76,7 @@ class SAResNet(nn.Module):
                                     heads=self.heads, logger=self.logger))
             else:
                 layers.append(block(self.in_places, planes, stride))
-            self.in_places = planes * block.expansion
+            self.in_places = planes
         return nn.Sequential(*layers)
 
     def forward(self, x):

@@ -14,7 +14,7 @@ from lib.core.train import train
 from lib.core.vaild import validate
 from lib.config import cfg
 from lib.utils import save_checkpoint, get_model_parameters, get_logger, get_attention_logger
-from lib.utils import CrossEntropyLabelSmooth, get_scheduler
+from lib.utils import CrossEntropyLabelSmooth, get_scheduler, get_net_info
 
 
 def main():
@@ -41,6 +41,8 @@ def main():
                                      stem=cfg.model.stem,
                                      num_resblock=cfg.model.num_resblock,
                                      attention_logger=attention_logger)
+
+    get_net_info(model, (3, cfg.dataset.image_size, cfg.dataset.image_size), logger=logger)
 
     if cfg.model.pre_trained:
         filename = 'best_model_' + str(cfg.dataset.name) + '_' + \

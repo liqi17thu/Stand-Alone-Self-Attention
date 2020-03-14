@@ -24,58 +24,16 @@ class SAConv(nn.Module):
 
         assert self.out_channels % self.heads == 0, "out_channels should be divided by groups. (example: out_channels: 40, groups: 4)"
 
-        if self.encoding != 'none':
-            self.encoder = PositionalEncoding(out_channels, kernel_size, heads, bias, self.encoding, r_dim)
-
-        self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
-        self.reduce_conv = nn.Conv2d(in_channels, out_channels // 4, kernel_size=1, bias=bias, groups=heads)
-        self.expand_conv = nn.Conv2d(out_channels // 4, out_channels, kernel_size=1, bias=bias, groups=heads)
+        self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
 
         self.reset_parameters()
 
     def forward(self, x, r=None):
-        batch, channels, height, width = x.size()
-
-        padded_x = F.pad(x, [self.padding, self.padding, self.padding, self.padding])
-        k_out = self.key_conv(padded_x)
-        v_out = self.value_conv(padded_x)
-
-        k_out = k_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
-        v_out = v_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
-
-        # positonal encoding
-        if self.encoding == 'xl':
-            k_out, r_out, u, v = self.encoder(k_out, r)
-        elif self.encoding == 'none':
-            pass
-        else:
-            k_out = self.encoder(k_out)
-
-        k_out = k_out.contiguous().view(batch, self.heads, self.out_channels // self.heads,
-                                        height // self.stride, width // self.stride, -1)
-
-        out = k_out.sum(dim=2, keepdim=True) * self.temperature
-        out = F.softmax(out, dim=-1)
-
-        # print attention info
-        if not self.training and x.get_device() == 1 and cfg.disp_attention:
-            for head in range(self.heads):
-                self.logger.info("head {}".format(head))
-                for h in range(height // self.stride):
-                    for w in range(width // self.stride):
-                        self.logger.info("height {} width {}".format(h, w))
-                        for k in range(self.kernel_size):
-                            loggerInfo = "{:.3f} " * self.kernel_size
-                            self.logger.info(loggerInfo.format(
-                                *out[0][head][0][h][w][k * self.kernel_size:(k + 1) * self.kernel_size].tolist()))
-
-        out = (out * v_out).sum(dim=-1)
-        out = out.view(batch, -1, height // self.stride, width // self.stride)
-
+        out = F.avg_pool2d(x, self.kernel_size, self.stride, self.padding)
+        out = self.value_conv(out)
         return out
 
     def reset_parameters(self):
-        init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
 
 

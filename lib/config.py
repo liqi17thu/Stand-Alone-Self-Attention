@@ -33,7 +33,7 @@ cfg = CfgNode(dict(
     train=dict(
         epoch=100,
         start_epoch=0,
-        disp=100,
+        disp=10,
     ),
     dataset=dict(
         name="cifar10",
@@ -42,7 +42,7 @@ cfg = CfgNode(dict(
         test_dir="/data/home/v-had/data_local/imagenet/val",
         mean=[0.485, 0.456, 0.406],
         std=[0.229, 0.224, 0.225],
-        batch_size=50,
+        batch_size=256,
         image_size=32,
         test_resize=256,
         workers=8,
@@ -54,7 +54,7 @@ cfg = CfgNode(dict(
     ),
     optim=dict(
         method="sgd",
-        lr=0.05,
+        lr=0.25,
         momentum=0.9,
         warmup_epoch=20,
         warmup_multiplier=16,

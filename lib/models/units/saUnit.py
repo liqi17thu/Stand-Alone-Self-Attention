@@ -28,8 +28,8 @@ class SAConv(nn.Module):
             self.encoder = PositionalEncoding(out_channels, kernel_size, heads, bias, self.encoding, r_dim)
 
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
-        self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, stride=stride, groups=heads)
-        self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
+        self.reduce_conv = nn.Conv2d(in_channels, out_channels // 4, kernel_size=1, bias=bias, groups=heads)
+        self.expand_conv = nn.Conv2d(out_channels // 4, out_channels, kernel_size=1, bias=bias, groups=heads)
 
         self.reset_parameters()
 
@@ -37,7 +37,6 @@ class SAConv(nn.Module):
         batch, channels, height, width = x.size()
 
         padded_x = F.pad(x, [self.padding, self.padding, self.padding, self.padding])
-        q_out = self.query_conv(x)
         k_out = self.key_conv(padded_x)
         v_out = self.value_conv(padded_x)
 
@@ -52,18 +51,10 @@ class SAConv(nn.Module):
         else:
             k_out = self.encoder(k_out)
 
-        k_out = k_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride,
-                                        width // self.stride, -1)
-        v_out = v_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride,
-                                        width // self.stride, -1)
-        q_out = q_out.view(batch, self.heads, self.out_channels // self.heads, height // self.stride,
-                           width // self.stride, 1)
+        k_out = k_out.contiguous().view(batch, self.heads, self.out_channels // self.heads,
+                                        height // self.stride, width // self.stride, -1)
 
-        if self.encoding == 'xl':
-            out = q_out * k_out + q_out * r_out + u * k_out + v * r_out
-        else:
-            out = q_out * k_out
-        out = out.sum(dim=2, keepdim=True) * self.temperature
+        out = k_out.sum(dim=2, keepdim=True) * self.temperature
         out = F.softmax(out, dim=-1)
 
         # print attention info
@@ -86,7 +77,6 @@ class SAConv(nn.Module):
     def reset_parameters(self):
         init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
-        init.kaiming_normal_(self.query_conv.weight, mode='fan_out', nonlinearity='relu')
 
 
 class SAFull(nn.Module):

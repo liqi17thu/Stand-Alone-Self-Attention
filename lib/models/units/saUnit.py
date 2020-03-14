@@ -27,8 +27,8 @@ class SAConv(nn.Module):
         if self.encoding != 'none':
             self.encoder = PositionalEncoding(out_channels, kernel_size, heads, bias, self.encoding, r_dim)
 
-        self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
-        self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, stride=stride, groups=heads)
+        # self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
+        # self.query_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, stride=stride, groups=heads)
         self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
 
         self.reset_parameters()
@@ -37,8 +37,10 @@ class SAConv(nn.Module):
         batch, channels, height, width = x.size()
 
         padded_x = F.pad(x, [self.padding, self.padding, self.padding, self.padding])
-        q_out = self.query_conv(x)
-        k_out = self.key_conv(padded_x)
+        # q_out = self.query_conv(x)
+        # k_out = self.key_conv(padded_x)
+        q_out = x[:,:,::self.stride, ::self.stride]
+        k_out = padded_x
         v_out = self.value_conv(padded_x)
 
         k_out = k_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
@@ -84,9 +86,9 @@ class SAConv(nn.Module):
         return out
 
     def reset_parameters(self):
-        init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
+        # init.kaiming_normal_(self.key_conv.weight, mode='fan_out', nonlinearity='relu')
         init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
-        init.kaiming_normal_(self.query_conv.weight, mode='fan_out', nonlinearity='relu')
+        # init.kaiming_normal_(self.query_conv.weight, mode='fan_out', nonlinearity='relu')
 
 
 class SAFull(nn.Module):

@@ -28,8 +28,9 @@ class SAConv(nn.Module):
             self.encoder = PositionalEncoding(out_channels, kernel_size, heads, bias, self.encoding, r_dim)
 
         self.key_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
-        self.reduce_conv = nn.Conv2d(in_channels, out_channels // 4, kernel_size=1, bias=bias, groups=heads)
-        self.expand_conv = nn.Conv2d(out_channels // 4, out_channels, kernel_size=1, bias=bias, groups=heads)
+        self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
+        # self.reduce_conv = nn.Conv2d(in_channels, out_channels // 4, kernel_size=1, bias=bias, groups=heads)
+        # self.expand_conv = nn.Conv2d(out_channels // 4, out_channels, kernel_size=1, bias=bias, groups=heads)
 
         self.reset_parameters()
 
@@ -52,6 +53,8 @@ class SAConv(nn.Module):
             k_out = self.encoder(k_out)
 
         k_out = k_out.contiguous().view(batch, self.heads, self.out_channels // self.heads,
+                                        height // self.stride, width // self.stride, -1)
+        v_out = v_out.contiguous().view(batch, self.heads, self.out_channels // self.heads,
                                         height // self.stride, width // self.stride, -1)
 
         out = k_out.sum(dim=2, keepdim=True) * self.temperature

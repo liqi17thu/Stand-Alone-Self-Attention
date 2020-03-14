@@ -18,6 +18,7 @@ class SAResNet(nn.Module):
         self.logger = logger
         self.r_dim = cfg.model.r_dim
         self.encoding = cfg.model.encoding
+        self.expansion = cfg.model.expansion
 
         if stem.split('_')[1] == 'sa':
             if stem.split('_')[0] == 'cifar':
@@ -53,7 +54,7 @@ class SAResNet(nn.Module):
         self.layer3 = self._make_layer(block[2], 256, num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block[3], 512, num_blocks[3], stride=2)
         self.layers = nn.Sequential(self.layer1, self.layer2, self.layer3, self.layer4)
-        self.dense = nn.Linear(512 * block[3].expansion, num_classes)
+        self.dense = nn.Linear(512 * self.expansion, num_classes)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
         if cfg.model.encoding == "xl":
@@ -72,11 +73,11 @@ class SAResNet(nn.Module):
         layers = []
         for stride in strides:
             if block.__name__ == "SABottleneck" or block.__name__ == "SABasic":
-                layers.append(block(self.in_places, planes, stride, self.kernel_size, expansion=cfg.model.expansion,
+                layers.append(block(self.in_places, planes, stride, self.kernel_size, expansion=self.expansion,
                                     r_dim=self.r_dim, heads=self.heads, logger=self.logger))
             else:
-                layers.append(block(self.in_places, planes, stride, expansion=cfg.model.expansion))
-            self.in_places = planes * block.expansion
+                layers.append(block(self.in_places, planes, stride, expansion=self.expansion))
+            self.in_places = planes * self.expansion
         return nn.Sequential(*layers)
 
     def forward(self, x):

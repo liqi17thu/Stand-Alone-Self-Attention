@@ -39,6 +39,9 @@ def imagenet():
             normalize,
         ]))
 
+    train_sampler = torch.utils.data.distributed.DistributedSampler(train_data)
+    test_sampler = torch.utils.data.distributed.DistributedSampler(test_data)
+
     train_loader = torch.utils.data.DataLoader(
         train_data, batch_size=cfg.dataset.batch_size,
         shuffle=True,
@@ -49,5 +52,5 @@ def imagenet():
         shuffle=False,
         pin_memory=True, num_workers=cfg.dataset.workers)
 
-    return train_loader, test_loader, 1000
+    return [train_loader, test_loader], [train_sampler, test_sampler], 1000
 

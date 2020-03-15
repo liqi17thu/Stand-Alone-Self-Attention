@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
@@ -11,8 +12,29 @@ from lib.models.saResnet import *
 from lib.utils import CrossEntropyLabelSmooth, get_scheduler, get_net_info
 from lib.utils import save_checkpoint, get_model_parameters, get_logger, get_attention_logger
 
+if cfg.ddp.distributed:
+    try:
+        import apex
+        from apex.parallel import DistributedDataParallel as DDP
+        from apex import amp, optimizers
+        from apex.fp16_utils import *
+    except ImportError:
+        raise ImportError("Please install apex from https://www.github.com/nvidia/apex to run this example.")
+
 
 def main():
+
+    # DistributedDataParallel
+    if cfg.ddp.distributed:
+        np.random.seed(cfg.ddp.seed)
+        torch.manual_seed(cfg.ddp.seed)
+        torch.cuda.manual_seed_all(cfg.ddp.seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        torch.cuda.set_device(cfg.local_rank)
+        torch.distributed.init_process_group(backend='nccl', init_method=cfg.ddp.dist_url,
+                                             world_size=cfg.ddp.gpus, rank=cfg.ddp.local_rank)
+
     if cfg.test:
         logger = get_logger(os.path.join(cfg.save_path, 'test.log'))
     else:
@@ -20,7 +42,9 @@ def main():
     attention_logger = get_attention_logger(os.path.join(cfg.save_path, 'attention.log'))
     writer = SummaryWriter(cfg.log_dir)
 
-    train_loader, test_loader, num_classes = eval(cfg.dataset.name)()
+    loaders, samplers, num_classes = eval(cfg.dataset.name)()
+    train_loader, test_loader = loaders
+    train_sampler, test_sampler = samplers
 
     print('img_size: {}, num_classes: {}, stem: {}'.format(cfg.dataset.image_size,
                                                            num_classes,
@@ -73,9 +97,15 @@ def main():
     scheduler = get_scheduler(optimizer, len(train_loader), cfg)
 
     if cfg.cuda:
-        if torch.cuda.device_count() > 1:
+        if cfg.ddp.distributed:
+            model = model.cuda()
+            model = apex.parallel.convert_syncbn_model(model)
+            model = DDP(model, delay_allreduce=True)
+        elif torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)
-        model = model.cuda()
+            model = model.cuda()
+        else:
+            model = model.cuda()
         criterion = criterion.cuda()
 
     logger.info("Number of model parameters: {0:.2f}M".format(get_model_parameters(model) / 1000000))
@@ -85,6 +115,9 @@ def main():
         return
 
     for epoch in range(start_epoch, cfg.train.epoch + 1):
+        train_sampler.set_epoch(epoch)
+        test_sampler.set_epoch(epoch)
+
         train(model, train_loader, optimizer, criterion, scheduler, epoch, logger, writer)
         eval_acc = validate(model, test_loader, criterion, epoch, logger, attention_logger, writer)
 

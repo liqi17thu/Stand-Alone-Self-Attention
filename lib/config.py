@@ -11,12 +11,16 @@ from lib.utils import check_dir
 cfg = CfgNode(dict(
     save_path='./experiments',
     cuda=True,
-    distributed=True,
-    gpus=8,
     auto_resume=False,
     test=False,
     disp_attention=False,
 
+    ddp=dict(
+        distributed=True,
+        gpus=8,
+        dist_url='tcp://127.0.0.1:26443',
+        seed=772002,
+    ),
     model=dict(
         name='SAResNet26',
         stem='cifar_conv',
@@ -73,10 +77,15 @@ cfg = CfgNode(dict(
 parser = argparse.ArgumentParser('Stand-Alone Self-Attention')
 parser.add_argument('name', type=str)
 parser.add_argument('--cfg', type=str, default='./experiments/yaml/baseline.yaml')
+parser.add_argument('--local_rank', type=int, default=0, help='local_rank')
 
 args, unknown = parser.parse_known_args()
 cfg.merge_from_file(args.cfg)
 cfg.merge_from_list(unknown)
+
+if cfg.ddp.distributed:
+    cfg.ddp.local_rank = args.local_rank
+    cfg.ddp.local_rank = cfg.ddp.local_rank % cfg.ddp.gpus
 
 # inference some folder dir
 cfg.save_path = join(cfg.save_path, 'train')
@@ -102,6 +111,6 @@ elif not cfg.test:
 cfg.ckp_dir = check_dir(join(cfg.save_path, 'checkpoints'))
 cfg.log_dir = check_dir(join(cfg.save_path, 'runs'))
 
-print(cfg.model.name)
+print(cfg.local_rank)
 
 

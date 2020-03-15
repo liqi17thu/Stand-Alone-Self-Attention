@@ -36,6 +36,7 @@ cfg = CfgNode(dict(
     ),
     train=dict(
         epoch=100,
+        attention_epoch=80,
         start_epoch=0,
         disp=10,
     ),

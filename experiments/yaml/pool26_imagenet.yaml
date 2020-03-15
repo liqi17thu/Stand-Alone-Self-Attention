@@ -1,10 +1,10 @@
 train:
-  epoch: 180
-  attention_epoch: 160
+  epoch: 300
+  attention_epoch: 280
   disp: 50
 
 model:
-    name: 'PoolResNet50'
+    name: 'PoolResNet26'
     stem: 'imagenet_conv'
 
 dataset:

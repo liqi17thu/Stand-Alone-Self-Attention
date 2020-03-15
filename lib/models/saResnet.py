@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 
-from .units.saUnit import SAStem, SABasic, SABottleneck
+from .units.saUnit import SAStem, SABasic, SABottleneck, PoolBottleneck
 from .units.resUnit import Bottleneck, BasicBlock
 
 from lib.config import cfg
@@ -136,4 +136,44 @@ def SAResNet101(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num
 
 def SAResNet152(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
     block = [Bottleneck for _ in range(num_resblock)] + [SABottleneck for _ in range(4 - num_resblock)]
+    return SAResNet(block, [3, 4, 36, 3], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)
+
+
+def PoolResNet17(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
+    block = [Bottleneck for _ in range(num_resblock)] + [PoolBottleneck for _ in range(4 - num_resblock)]
+    return SAResNet(block, [1, 2, 1, 1], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)
+
+
+def PoolResNet18(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
+    block = [BasicBlock for _ in range(num_resblock)] + [PoolBottleneck for _ in range(4 - num_resblock)]
+    return SAResNet(block, [2, 2, 2, 2], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)
+
+
+def PoolResNet20(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
+    block = [Bottleneck for _ in range(num_resblock)] + [PoolBottleneck for _ in range(4 - num_resblock)]
+    return SAResNet(block, [1, 2, 2, 1], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)
+
+
+def PoolResNet26(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
+    block = [Bottleneck for _ in range(num_resblock)] + [PoolBottleneck for _ in range(4 - num_resblock)]
+    return SAResNet(block, [1, 2, 4, 1], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)
+
+
+def PoolResNet38(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
+    block = [Bottleneck for _ in range(num_resblock)] + [PoolBottleneck for _ in range(4 - num_resblock)]
+    return SAResNet(block, [2, 3, 5, 2], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)
+
+
+def PoolResNet50(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
+    block = [Bottleneck for _ in range(num_resblock)] + [PoolBottleneck for _ in range(4 - num_resblock)]
+    return SAResNet(block, [3, 4, 6, 3], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)
+
+
+def PoolResNet101(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
+    block = [Bottleneck for _ in range(num_resblock)] + [PoolBottleneck for _ in range(4 - num_resblock)]
+    return SAResNet(block, [3, 4, 23, 3], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)
+
+
+def PoolResNet152(num_classes=1000, heads=8, kernel_size=7, stem='cifar_conv', num_resblock=2, attention_logger=None):
+    block = [Bottleneck for _ in range(num_resblock)] + [PoolBottleneck for _ in range(4 - num_resblock)]
     return SAResNet(block, [3, 4, 36, 3], num_classes, heads, kernel_size, stem, num_resblock, attention_logger)

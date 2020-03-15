@@ -421,3 +421,41 @@ class SABottleneck(nn.Module):
         out = F.relu(out)
 
         return out
+
+
+class PoolBottleneck(nn.Module):
+
+    def __init__(self, in_channels, out_channels, stride, kernel_size, groups=1, expansion=4, base_width=64, **kwargs):
+        super(PoolBottleneck, self).__init__()
+        self.stride = stride
+        self.kernel_size = kernel_size
+        self.with_conv = cfg.model.with_conv
+        self.expansion = expansion
+
+        width = int(out_channels * (base_width / 64.)) * groups
+
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(in_channels, width, kernel_size=1, bias=False),
+            nn.BatchNorm2d(width),
+            nn.ReLU(),
+        )
+
+        padding = get_same_padding(kernel_size)
+        self.conv2 = nn.Sequential(
+            nn.AvgPool2d(kernel_size, padding=padding, stride=stride),
+            nn.Conv2d(width, self.expansion * out_channels, kernel_size=1, bias=False),
+            nn.BatchNorm2d(self.expansion * out_channels),
+        )
+
+        self.shortcut = nn.Sequential()
+        if stride != 1 or in_channels != self.expansion * out_channels:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_channels, self.expansion * out_channels, kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(self.expansion * out_channels)
+            )
+
+    def forward(self, x, r=None):
+        out = self.conv1(x)
+        out = self.conv2(out) + self.shortcut(x)
+        out = F.relu(out)
+        return out

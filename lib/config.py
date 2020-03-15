@@ -53,12 +53,18 @@ cfg = CfgNode(dict(
         smooth=0.1,
     ),
     optim=dict(
-        method="sgd",
-        lr=0.25,
-        momentum=0.9,
+        method="SGD",
+        sgd_params=dict(
+            lr=0.25,
+            momentum=0.9,
+            weight_decay=0.0001,
+        ),
+        adam_params=dict(
+            lr=3e-3,
+            weight_decay=0.0005,
+        ),
         warmup_epoch=20,
         warmup_multiplier=16,
-        wd=0.0001,
     ),
 ))
 

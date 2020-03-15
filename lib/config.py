@@ -55,7 +55,7 @@ cfg = CfgNode(dict(
     optim=dict(
         method="SGD",
         sgd_params=dict(
-            lr=0.25,
+            lr=0.5,
             momentum=0.9,
             weight_decay=0.0001,
         ),

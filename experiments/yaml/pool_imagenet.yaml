@@ -1,5 +1,6 @@
 train:
   epoch: 300
+  disp: 50
 
 model:
     name: 'PoolResNet50'

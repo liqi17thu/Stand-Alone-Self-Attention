@@ -6,6 +6,7 @@ from torch.utils.tensorboard import SummaryWriter
 from lib.config import cfg
 from lib.core.train import train
 from lib.core.vaild import validate
+from lib.data import *
 from lib.models.saMobilenet import *
 from lib.models.saResnet import *
 from lib.utils import CrossEntropyLabelSmooth, get_scheduler, get_net_info

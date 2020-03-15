@@ -1,0 +1,14 @@
+train:
+  epoch: 300
+  attention_epoch: 280
+  disp: 50
+
+model:
+    name: 'PoolResNet26'
+    stem: 'imagenet_conv'
+
+dataset:
+  name: 'imagenet'
+  train_dir: './data/imagenet/train'
+  test_dir: './data/imagenet/val'
+  image_size: 224

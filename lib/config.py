@@ -111,7 +111,3 @@ elif not cfg.test:
 
 cfg.ckp_dir = check_dir(join(cfg.save_path, 'checkpoints'))
 cfg.log_dir = check_dir(join(cfg.save_path, 'runs'))
-
-print(cfg.local_rank)
-
-

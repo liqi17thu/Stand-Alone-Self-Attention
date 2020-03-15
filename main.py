@@ -114,8 +114,9 @@ def main():
         return
 
     for epoch in range(start_epoch, cfg.train.epoch + 1):
-        train_sampler.set_epoch(epoch)
-        test_sampler.set_epoch(epoch)
+        if cfg.ddp.distributed:
+            train_sampler.set_epoch(epoch)
+            test_sampler.set_epoch(epoch)
 
         train(model, train_loader, optimizer, criterion, scheduler, epoch, logger, writer)
         eval_acc = validate(model, test_loader, criterion, epoch, logger, attention_logger, writer)

@@ -24,11 +24,16 @@ def cifar10():
         )
     ])
 
+
     train_data = datasets.CIFAR10('data', train=True, download=True, transform=transform_train)
     test_data = datasets.CIFAR10('data', train=False, transform=transform_test)
 
-    train_sampler = torch.utils.data.distributed.DistributedSampler(train_data)
-    test_sampler = torch.utils.data.distributed.DistributedSampler(test_data)
+    if cfg.ddp.distributed:
+        train_sampler = torch.utils.data.distributed.DistributedSampler(train_data)
+        test_sampler = torch.utils.data.distributed.DistributedSampler(test_data)
+    else:
+        train_sampler = None
+        test_sampler = None
 
     train_loader = torch.utils.data.DataLoader(
         train_data,

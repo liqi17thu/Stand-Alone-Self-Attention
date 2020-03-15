@@ -37,7 +37,7 @@ def train(model, train_loader, optimizer, criterion, scheduler, epoch, logger, w
         top5.update(prec5.item(), N)
 
         step += 1
-        if step % cfg.train.disp == 0:
+        if step % cfg.train.disp == 0 and cfg.ddp.local_rank == 0:
             logger.info("Train: Epoch {}/{}  Time: {:.3f} Loss {losses.avg:.3f} LR {:.3f} "
                         "Prec@(1,5) ({top1.avg:.1%}, {top5.avg:.1%})".format(
                         epoch, cfg.train.epoch, (time.time()-sta_time)/cfg.train.disp,

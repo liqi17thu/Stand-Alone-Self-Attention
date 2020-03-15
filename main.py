@@ -14,7 +14,7 @@ from lib.core.train import train
 from lib.core.vaild import validate
 from lib.config import cfg
 from lib.utils import save_checkpoint, get_model_parameters, get_logger, get_attention_logger
-from lib.utils import CrossEntropyLabelSmooth, get_scheduler
+from lib.utils import CrossEntropyLabelSmooth, get_scheduler, get_net_info
 
 
 def main():
@@ -42,6 +42,8 @@ def main():
                                      num_resblock=cfg.model.num_resblock,
                                      attention_logger=attention_logger)
 
+    get_net_info(model, (3, cfg.dataset.image_size, cfg.dataset.image_size), logger=logger)
+
     if cfg.model.pre_trained:
         filename = 'best_model_' + str(cfg.dataset.name) + '_' + \
                    str(cfg.model.name) + '_' + str(cfg.model.stem) + '_ckpt.tar'
@@ -64,8 +66,14 @@ def main():
         criterion = CrossEntropyLabelSmooth(num_classes=num_classes, epsilon=cfg.crit.smooth)
     else:
         criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=cfg.optim.lr,
-                          momentum=cfg.optim.momentum, weight_decay=cfg.optim.wd)
+
+    if cfg.optim.method == 'SGD':
+        optimizer = optim.SGD(model.parameters(), **cfg.optim.sgd_params)
+    elif cfg.optim.method == 'Adam':
+        optimizer = optim.Adam(model.parameters(), **cfg.optim.adam_params)
+    else:
+        raise ValueError(f'Unsupported optimization: {cfg.optim.method}')
+
     scheduler = get_scheduler(optimizer, len(train_loader), cfg)
 
     if cfg.cuda:

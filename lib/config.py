@@ -61,7 +61,7 @@ cfg = CfgNode(dict(
         ),
         adam_params=dict(
             lr=3e-3,
-            weight_decay=0.0005,
+            weight_decay=0.0001,
         ),
         warmup_epoch=20,
         warmup_multiplier=16,

@@ -32,7 +32,7 @@ def main():
         torch.cuda.manual_seed_all(cfg.ddp.seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-        torch.cuda.set_device(cfg.local_rank)
+        torch.cuda.set_device(cfg.ddp.local_rank)
         torch.distributed.init_process_group(backend='nccl', init_method=cfg.ddp.dist_url,
                                              world_size=cfg.ddp.gpus, rank=cfg.ddp.local_rank)
 

@@ -1,5 +1,5 @@
 train:
-  epoch: 300
+  epoch: 180
 
 model:
     name: 'SAResNet50'

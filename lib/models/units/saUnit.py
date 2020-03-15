@@ -302,7 +302,7 @@ class SABasic(nn.Module):
 class SABottleneck(nn.Module):
 
     def __init__(self, in_channels, out_channels, stride, kernel_size, groups=1, expansion=4,
-                 base_width=64, heads=8, r_dim=256, logger=None):
+                 base_width=64, heads=8):
         super(SABottleneck, self).__init__()
         self.stride = stride
         self.heads = heads
@@ -310,11 +310,19 @@ class SABottleneck(nn.Module):
         self.with_conv = cfg.model.with_conv
         self.expansion = expansion
 
-        self.conv = nn.Sequential(
-            nn.AvgPool2d(7, padding=3, stride=stride),
-            nn.Conv2d(in_channels, self.expansion * out_channels, kernel_size=1, bias=False),
-            nn.BatchNorm2d(self.expansion * out_channels),
+        width = int(out_channels * (base_width / 64.)) * groups
+
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(in_channels, width, kernel_size=1, bias=False),
+            nn.BatchNorm2d(width),
             nn.ReLU(),
+        )
+
+        padding = get_same_padding(kernel_size)
+        self.conv2 = nn.Sequential(
+            nn.AvgPool2d(kernel_size, padding=padding, stride=stride),
+            nn.Conv2d(width, self.expansion * out_channels, kernel_size=1, bias=False),
+            nn.BatchNorm2d(self.expansion * out_channels),
         )
 
         self.shortcut = nn.Sequential()
@@ -325,6 +333,7 @@ class SABottleneck(nn.Module):
             )
 
     def forward(self, x, r=None):
-        out = self.conv(x) + self.shortcut(x)
+        out = self.conv1(x)
+        out = self.conv2(out) + self.shortcut(x)
         out = F.relu(out)
         return out

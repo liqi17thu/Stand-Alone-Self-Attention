@@ -1,20 +1,15 @@
-import torch
+import os
+
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 
-import os
-import argparse
-import shutil
-
-from lib.data import *
-from lib.models.dynamicResnet import *
-from lib.models.saResnet import *
-from lib.models.saMobilenet import *
+from lib.config import cfg
 from lib.core.train import train
 from lib.core.vaild import validate
-from lib.config import cfg
-from lib.utils import save_checkpoint, get_model_parameters, get_logger, get_attention_logger
+from lib.models.saMobilenet import *
+from lib.models.saResnet import *
 from lib.utils import CrossEntropyLabelSmooth, get_scheduler, get_net_info
+from lib.utils import save_checkpoint, get_model_parameters, get_logger, get_attention_logger
 
 
 def main():
@@ -33,7 +28,8 @@ def main():
 
     print('Model Name: {0}'.format(cfg.model.name))
     if cfg.model.name == "MobileNetV3":
-        model = MobileNetV3(n_class=num_classes, input_size=cfg.dataset.image_size, mode='large', logger=attention_logger)
+        model = MobileNetV3(n_class=num_classes, input_size=cfg.dataset.image_size, mode='large',
+                            logger=attention_logger)
     else:
         model = eval(cfg.model.name)(num_classes=num_classes,
                                      heads=cfg.model.heads,

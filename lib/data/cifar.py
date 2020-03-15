@@ -24,20 +24,27 @@ def cifar10():
         )
     ])
 
+    train_data = datasets.CIFAR10('data', train=True, download=True, transform=transform_train)
+    test_data = datasets.CIFAR10('data', train=False, transform=transform_test)
+
+    train_sampler = torch.utils.data.distributed.DistributedSampler(train_data)
+    test_sampler = torch.utils.data.distributed.DistributedSampler(test_data)
+
     train_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10('data', train=True, download=True, transform=transform_train),
+        train_data,
         batch_size=cfg.dataset.batch_size,
         shuffle=True,
         num_workers=cfg.dataset.workers
     )
 
     test_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR10('data', train=False, transform=transform_test),
+        test_data,
         batch_size=cfg.dataset.batch_size,
         shuffle=False,
         num_workers=cfg.dataset.workers
     )
-    return train_loader, test_loader, 10
+
+    return [train_loader, test_loader], [train_sampler, test_sampler], 10
 
 
 def cifar100(cfg):

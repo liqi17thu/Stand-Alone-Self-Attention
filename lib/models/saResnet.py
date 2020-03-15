@@ -74,7 +74,7 @@ class SAResNet(nn.Module):
         for stride in strides:
             if block.__name__ == "SABottleneck" or block.__name__ == "SABasic":
                 layers.append(block(self.in_places, planes, stride, self.kernel_size, expansion=self.expansion,
-                                    r_dim=self.r_dim, heads=self.heads, logger=self.logger))
+                                    heads=self.heads))
             else:
                 layers.append(block(self.in_places, planes, stride, expansion=self.expansion))
             self.in_places = planes * self.expansion

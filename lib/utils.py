@@ -296,7 +296,7 @@ def count_net_flops(net, data_shape=(1, 3, 224, 224)):
     if isinstance(net, nn.DataParallel):
         net = net.module
 
-    net = copy.deepcopy(net)
+    # net = copy.deepcopy(net)
 
     flop, _ = profile(net, data_shape)
     return flop
@@ -371,7 +371,7 @@ def count_parameters(net):
     return total_params
 
 
-def get_net_info(net, input_shape=(3, 224, 224), measure_latency='gpu', logger=None):
+def get_net_info(net, input_shape=(3, 224, 224), measure_latency=None, logger=None):
     net_info = {}
     if isinstance(net, nn.DataParallel):
         net = net.module

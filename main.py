@@ -42,7 +42,7 @@ def main():
                                      num_resblock=cfg.model.num_resblock,
                                      attention_logger=attention_logger)
 
-    # get_net_info(model, (3, cfg.dataset.image_size, cfg.dataset.image_size), logger=logger)
+    get_net_info(model, (3, cfg.dataset.image_size, cfg.dataset.image_size), logger=logger)
 
     if cfg.model.pre_trained:
         filename = 'best_model_' + str(cfg.dataset.name) + '_' + \

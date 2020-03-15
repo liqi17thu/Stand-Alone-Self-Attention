@@ -35,13 +35,17 @@ def main():
         torch.cuda.set_device(cfg.ddp.local_rank)
         torch.distributed.init_process_group(backend='nccl', init_method=cfg.ddp.dist_url,
                                              world_size=cfg.ddp.gpus, rank=cfg.ddp.local_rank)
-
-    if cfg.test:
-        logger = get_logger(os.path.join(cfg.save_path, 'test.log'))
+    if cfg.ddp.local_rank == 0:
+        if cfg.test:
+            logger = get_logger(os.path.join(cfg.save_path, 'test.log'))
+        else:
+            logger = get_logger(os.path.join(cfg.save_path, 'train.log'))
+        attention_logger = get_attention_logger(os.path.join(cfg.save_path, 'attention.log'))
+        writer = SummaryWriter(cfg.log_dir)
     else:
-        logger = get_logger(os.path.join(cfg.save_path, 'train.log'))
-    attention_logger = get_attention_logger(os.path.join(cfg.save_path, 'attention.log'))
-    writer = SummaryWriter(cfg.log_dir)
+        logger = None
+        attention_logger = None
+        writer = None
 
     loaders, samplers, num_classes = eval(cfg.dataset.name)()
     train_loader, test_loader = loaders

@@ -110,6 +110,5 @@ if cfg.ddp.local_rank == 0:
             os.mkdir(cfg.save_path)
         else:
             raise ValueError("Input Not Supported!")
-
-cfg.ckp_dir = check_dir(join(cfg.save_path, 'checkpoints'))
-cfg.log_dir = check_dir(join(cfg.save_path, 'runs'))
+    cfg.ckp_dir = check_dir(join(cfg.save_path, 'checkpoints'))
+    cfg.log_dir = check_dir(join(cfg.save_path, 'runs'))

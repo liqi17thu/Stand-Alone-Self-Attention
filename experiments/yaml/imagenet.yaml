@@ -1,5 +1,6 @@
 train:
   epoch: 300
+  attention_epoch: 280
   disp: 50
 
 model:

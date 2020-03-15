@@ -16,7 +16,7 @@ def validate(model, test_loader, criterion, epoch, logger, attention_logger, wri
 
 
     step = 0
-    if epoch > 80:
+    if epoch > cfg.train.attention_epoch:
         attention_logger.info("Epoch {}".format(epoch))
     with torch.no_grad():
         sta_time = time.time()
@@ -42,7 +42,7 @@ def validate(model, test_loader, criterion, epoch, logger, attention_logger, wri
 
                 writer.add_scalar('Loss/vaild', losses.avg, epoch * len(test_loader) + i)
                 writer.add_scalar('Accuracy/vaild', top1.avg, epoch * len(test_loader) + i)
-            if step % cfg.train.disp == 0 and epoch > 80:
+            if step % cfg.train.disp == 0 and epoch > cfg.train.attention_epoch:
                 cfg.disp_attention = True
             else:
                 cfg.disp_attention = False

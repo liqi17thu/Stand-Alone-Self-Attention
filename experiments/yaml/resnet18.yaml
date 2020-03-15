@@ -1,4 +1,0 @@
-
-model:
-  name: 'SAResNet18'
-  num_resblock: 4

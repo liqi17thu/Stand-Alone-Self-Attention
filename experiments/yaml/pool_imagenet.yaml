@@ -1,0 +1,12 @@
+train:
+  epoch: 300
+
+model:
+    name: 'PoolResNet50'
+    stem: 'imagenet_conv'
+
+dataset:
+  name: 'imagenet'
+  train_dir: './data/imagenet/train'
+  test_dir: './data/imagenet/val'
+  image_size: 224

@@ -310,25 +310,11 @@ class SABottleneck(nn.Module):
         self.with_conv = cfg.model.with_conv
         self.expansion = expansion
 
-        width = int(out_channels * (base_width / 64.)) * groups
-
-        self.conv1 = nn.Sequential(
-            nn.AvgPool2d(7, padding=3),
-            nn.Conv2d(in_channels, width, kernel_size=1, bias=False),
-            nn.BatchNorm2d(width),
-            nn.ReLU(),
-        )
-
-        self.conv1 = nn.Sequential(
-            nn.Conv2d(in_channels, width, kernel_size=1, bias=False),
-            nn.BatchNorm2d(width),
-            nn.ReLU(),
-        )
-
-        self.conv3 = nn.Sequential(
-            nn.AvgPool2d(7, padding=3),
-            nn.Conv2d(width, self.expansion * out_channels, kernel_size=1, bias=False),
+        self.conv = nn.Sequential(
+            nn.AvgPool2d(7, padding=3, stride=stride),
+            nn.Conv2d(in_channels, self.expansion * out_channels, kernel_size=1, bias=False),
             nn.BatchNorm2d(self.expansion * out_channels),
+            nn.ReLU(),
         )
 
         self.shortcut = nn.Sequential()
@@ -338,16 +324,7 @@ class SABottleneck(nn.Module):
                 nn.BatchNorm2d(self.expansion * out_channels)
             )
 
-    def conv_2_1(self, out, r):
-        out = self.sa_conv(out, r)
-        return self.non_linear(out)
-
     def forward(self, x, r=None):
-        out = self.conv1(x)
-        out = self.conv2(out)
-        out = self.conv3(out)
-
-        out += self.shortcut(x)
+        out = self.conv(x) + self.shortcut(x)
         out = F.relu(out)
-
         return out

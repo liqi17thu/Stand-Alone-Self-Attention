@@ -85,10 +85,10 @@ class SAResNet(nn.Module):
         for i in range(self.num_resblock):
             out = self.layers[i](out)
         for i in range(self.num_resblock, 4):
-            if not self.training and x.get_device() == 1 and cfg.disp_attention:
+            if not self.training and x.get_device() == 1 and cfg.disp_attention and cfg.ddp.local_rank == 0:
                 self.logger.info(f"layer {i+1}")
             for (j, layer) in enumerate(self.layers[i]):
-                if not self.training and x.get_device() == 1 and cfg.disp_attention:
+                if not self.training and x.get_device() == 1 and cfg.disp_attention and cfg.ddp.local_rank == 0:
                     self.logger.info(f"block {j}")
                 out = layer(out, self.r)
 

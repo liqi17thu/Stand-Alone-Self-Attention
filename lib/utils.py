@@ -61,7 +61,6 @@ def save_checkpoint(state, is_best, save_path, filename):
     torch.save(state, file_path)
     best_file_path = os.path.join(save_path, 'best_' + filename)
     if is_best:
-        print('best Model Saving ...')
         shutil.copyfile(file_path, best_file_path)
 
 
@@ -334,8 +333,6 @@ def measure_net_latency(net, l_type='gpu8', fast=True, input_shape=(3, 224, 224)
             n_warmup = 50
             n_sample = 50
         if get_net_device(net) != torch.device('cpu'):
-            if not clean:
-                print('move net to cpu for measuring cpu latency')
             net = copy.deepcopy(net).cpu()
     elif l_type == 'gpu':
         if fast:
@@ -371,7 +368,7 @@ def count_parameters(net):
     return total_params
 
 
-def get_net_info(net, input_shape=(3, 224, 224), measure_latency=None, logger=None):
+def get_net_info(net, input_shape=(3, 224, 224), measure_latency=None, logger=None, local_rank=0):
     net_info = {}
     if isinstance(net, nn.DataParallel):
         net = net.module
@@ -391,7 +388,8 @@ def get_net_info(net, input_shape=(3, 224, 224), measure_latency=None, logger=No
             'hist': measured_latency
         }
 
-    logger.info('Total training params: %.2fM' % (net_info['params'] / 1e6))
-    logger.info('Total FLOPs: %.2fM' % (net_info['flops'] / 1e6))
-    for l_type in latency_types:
-        logger.info('Estimated %s latency: %.3fms' % (l_type, net_info['%s latency' % l_type]['val']))
+    if local_rank == 0:
+        logger.info('Total training params: %.2fM' % (net_info['params'] / 1e6))
+        logger.info('Total FLOPs: %.2fM' % (net_info['flops'] / 1e6))
+        for l_type in latency_types:
+            logger.info('Estimated %s latency: %.3fms' % (l_type, net_info['%s latency' % l_type]['val']))

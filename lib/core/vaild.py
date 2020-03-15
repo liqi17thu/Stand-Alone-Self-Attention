@@ -7,7 +7,8 @@ from lib.config import cfg
 
 
 def validate(model, test_loader, criterion, epoch, logger, attention_logger, writer):
-    print('evaluation ...')
+    if cfg.ddp.local_rank == 0:
+        print('evaluation ...')
     model.eval()
 
     top1 = AvgrageMeter()
@@ -16,7 +17,7 @@ def validate(model, test_loader, criterion, epoch, logger, attention_logger, wri
 
 
     step = 0
-    if epoch > cfg.train.attention_epoch:
+    if epoch > cfg.train.attention_epoch and cfg.ddp.local_rank == 0:
         attention_logger.info("Epoch {}".format(epoch))
     with torch.no_grad():
         sta_time = time.time()
@@ -34,7 +35,7 @@ def validate(model, test_loader, criterion, epoch, logger, attention_logger, wri
             top5.update(prec5.item(), N)
 
             step += 1
-            if step % cfg.train.disp == 0:
+            if step % cfg.train.disp == 0 and cfg.ddp.local_rank == 0:
                 logger.info("Test: Epoch {}/{}  Time: {:.3f} Loss {losses.avg:.3f} "
                             "Prec@(1,5) ({top1.avg:.1%}, {top5.avg:.1%})".format(
                     epoch, cfg.train.epoch, (time.time() - sta_time) / cfg.train.disp,

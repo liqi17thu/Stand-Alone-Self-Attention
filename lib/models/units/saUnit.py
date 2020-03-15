@@ -67,7 +67,7 @@ class SAConv(nn.Module):
         out = F.softmax(out, dim=-1)
 
         # print attention info
-        if not self.training and x.get_device() == 1 and cfg.disp_attention:
+        if not self.training and x.get_device() == 1 and cfg.disp_attention and cfg.ddp.local_rank == 0:
             for head in range(self.heads):
                 self.logger.info("head {}".format(head))
                 for h in range(height // self.stride):

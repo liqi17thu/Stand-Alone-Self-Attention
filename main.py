@@ -47,11 +47,12 @@ def main():
     train_loader, test_loader = loaders
     train_sampler, test_sampler = samplers
 
-    print('img_size: {}, num_classes: {}, stem: {}'.format(cfg.dataset.image_size,
+    if cfg.ddp.local_rank == 0:
+        print('img_size: {}, num_classes: {}, stem: {}'.format(cfg.dataset.image_size,
                                                            num_classes,
                                                            cfg.model.stem))
-
-    print('Model Name: {0}'.format(cfg.model.name))
+    if cfg.ddp.local_rank == 0:
+        print('Model Name: {0}'.format(cfg.model.name))
     if cfg.model.name == "MobileNetV3":
         model = MobileNetV3(n_class=num_classes, input_size=cfg.dataset.image_size, mode='large',
                             logger=attention_logger)
@@ -66,7 +67,8 @@ def main():
     if cfg.model.pre_trained:
         filename = 'best_model_' + str(cfg.dataset.name) + '_' + \
                    str(cfg.model.name) + '_' + str(cfg.model.stem) + '_ckpt.tar'
-        print('filename :: ', filename)
+        if cfg.ddp.local_rank == 0:
+            print('filename :: ', filename)
         file_path = os.path.join('./checkpoint', filename)
         checkpoint = torch.load(file_path)
 
@@ -74,14 +76,15 @@ def main():
         start_epoch = checkpoint['epoch']
         best_acc = checkpoint['best_acc']
         model_parameters = checkpoint['parameters']
-        print('Load model, Parameters: {0}, Start_epoch: {1}, Acc: {2}'.format(model_parameters, start_epoch, best_acc))
-        logger.info(
-            'Load model, Parameters: {0}, Start_epoch: {1}, Acc: {2}'.format(model_parameters, start_epoch, best_acc))
+        if cfg.ddp.local_rank == 0:
+            print('Load model, Parameters: {0}, Start_epoch: {1}, Acc: {2}'.format(model_parameters, start_epoch, best_acc))
+            logger.info('Load model, Parameters: {0}, Start_epoch: {1}, Acc: {2}'.format(model_parameters, start_epoch, best_acc))
     else:
         start_epoch = cfg.train.start_epoch
         best_acc = 0.0
 
-    get_net_info(model, (3, cfg.dataset.image_size, cfg.dataset.image_size), logger=logger)
+    get_net_info(model, (3, cfg.dataset.image_size, cfg.dataset.image_size),
+                 logger=logger, local_rank=cfg.ddp.local_rank)
 
     if cfg.crit.smooth > 0:
         criterion = CrossEntropyLabelSmooth(num_classes=num_classes, epsilon=cfg.crit.smooth)
@@ -126,7 +129,8 @@ def main():
 
         filename = 'model_' + str(cfg.dataset.name) + '_' + \
                    str(cfg.model.name) + '_' + str(cfg.model.stem) + '_ckpt.tar'
-        print('filename :: ', filename)
+        if cfg.ddp.local_rank == 0:
+            print('filename :: ', filename)
 
         parameters = get_model_parameters(model)
 

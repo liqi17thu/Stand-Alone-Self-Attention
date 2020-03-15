@@ -18,6 +18,7 @@ cfg = CfgNode(dict(
     ddp=dict(
         distributed=True,
         gpus=8,
+        local_rank=0,
         dist_url='tcp://127.0.0.1:26443',
         seed=772002,
     ),

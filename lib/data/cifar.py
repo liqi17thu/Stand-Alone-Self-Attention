@@ -24,7 +24,6 @@ def cifar10():
         )
     ])
 
-
     train_data = datasets.CIFAR10('data', train=True, download=True, transform=transform_train)
     test_data = datasets.CIFAR10('data', train=False, transform=transform_test)
 

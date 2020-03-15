@@ -42,8 +42,6 @@ def main():
                                      num_resblock=cfg.model.num_resblock,
                                      attention_logger=attention_logger)
 
-    get_net_info(model, (3, cfg.dataset.image_size, cfg.dataset.image_size), logger=logger)
-
     if cfg.model.pre_trained:
         filename = 'best_model_' + str(cfg.dataset.name) + '_' + \
                    str(cfg.model.name) + '_' + str(cfg.model.stem) + '_ckpt.tar'
@@ -61,6 +59,8 @@ def main():
     else:
         start_epoch = cfg.train.start_epoch
         best_acc = 0.0
+
+    get_net_info(model, (3, cfg.dataset.image_size, cfg.dataset.image_size), logger=logger)
 
     if cfg.crit.smooth > 0:
         criterion = CrossEntropyLabelSmooth(num_classes=num_classes, epsilon=cfg.crit.smooth)
@@ -81,8 +81,6 @@ def main():
             model = nn.DataParallel(model)
         model = model.cuda()
         criterion = criterion.cuda()
-
-    logger.info("Number of model parameters: {0:.2f}M".format(get_model_parameters(model) / 1000000))
 
     if cfg.test:
         _ = validate(model, test_loader, criterion, start_epoch, logger, attention_logger, writer)

@@ -113,7 +113,7 @@ def main():
     if cfg.cuda:
         if cfg.ddp.distributed:
             model = model.to(torch.cuda.current_device())
-            # model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
+            model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
             model = DDP(model, device_ids=[gpu_id], find_unused_parameters=True)
         elif torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)

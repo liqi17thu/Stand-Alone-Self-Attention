@@ -9,7 +9,7 @@ from yacs.config import CfgNode
 from lib.utils import check_dir
 
 cfg = CfgNode(dict(
-    save_path='./experiments',
+    save_path='experiments',
     cuda=True,
     auto_resume=False,
     test=False,
@@ -116,4 +116,6 @@ if cfg.ddp.local_rank == 0:
     cfg.ckp_dir = check_dir(join(cfg.save_path, 'checkpoints'))
     cfg.log_dir = check_dir(join(cfg.save_path, 'runs'))
 else:
-    cfg.ckp_dir = join(cfg.save_path, 'checkpoints'))
+    cfg.save_path = join(cfg.save_path, 'train', args.name)
+    cfg.ckp_dir = join(cfg.save_path, 'checkpoints')
+    cfg.log_dir = join(cfg.save_path, 'runs')

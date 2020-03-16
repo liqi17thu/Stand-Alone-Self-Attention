@@ -74,6 +74,9 @@ def main():
                                      num_resblock=cfg.model.num_resblock,
                                      attention_logger=attention_logger)
 
+    get_net_info(model, (3, cfg.dataset.image_size, cfg.dataset.image_size),
+                 logger=logger, local_rank=cfg.ddp.local_rank)
+
     if cfg.model.pre_trained:
         filename = 'best_model_' + str(cfg.dataset.name) + '_' + \
                    str(cfg.model.name) + '_' + str(cfg.model.stem) + '_ckpt.tar'
@@ -92,9 +95,6 @@ def main():
     else:
         start_epoch = cfg.train.start_epoch
         best_acc = 0.0
-
-    get_net_info(model, (3, cfg.dataset.image_size, cfg.dataset.image_size),
-                 logger=logger, local_rank=cfg.ddp.local_rank)
 
     if cfg.crit.smooth > 0:
         criterion = CrossEntropyLabelSmooth(num_classes=num_classes, epsilon=cfg.crit.smooth)

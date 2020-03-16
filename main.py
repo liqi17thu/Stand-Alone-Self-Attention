@@ -82,7 +82,7 @@ def main():
                    str(cfg.model.name) + '_' + str(cfg.model.stem) + '_ckpt.tar'
         if cfg.ddp.local_rank == 0:
             print('filename :: ', filename)
-        file_path = os.path.join(cfg.ckp_dir, filename)
+        file_path = os.path.join(cfg.test_path, 'checkpoints', filename)
         checkpoint = torch.load(file_path)
 
         model.load_state_dict(checkpoint['state_dict'])

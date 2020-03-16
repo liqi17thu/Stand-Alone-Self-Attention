@@ -13,6 +13,7 @@ cfg = CfgNode(dict(
     cuda=True,
     auto_resume=False,
     test=False,
+    test_name='default',
     disp_attention=False,
 
     ddp=dict(
@@ -96,6 +97,10 @@ if cfg.ddp.local_rank == 0:
     # inference some folder dir
     cfg.save_path = join(cfg.save_path, 'train')
     check_dir(cfg.save_path)
+    if cfg.test_name == 'default':
+        cfg.test_path = join(cfg.save_path, args.name)
+    else:
+        cfg.test_path = checkdir(join(cfg.save_path, cfg.test_name))
 
     cfg.save_path = join(cfg.save_path, args.name)
 
@@ -116,6 +121,10 @@ if cfg.ddp.local_rank == 0:
     cfg.ckp_dir = check_dir(join(cfg.save_path, 'checkpoints'))
     cfg.log_dir = check_dir(join(cfg.save_path, 'runs'))
 else:
+    if cfg.test_name == 'default':
+        cfg.test_path = join(cfg.save_path, 'train', args.name)
+    else:
+        cfg.test_path = join(cfg.save_path, 'train', cfg.test_name)
     cfg.save_path = join(cfg.save_path, 'train', args.name)
     cfg.ckp_dir = join(cfg.save_path, 'checkpoints')
     cfg.log_dir = join(cfg.save_path, 'runs')

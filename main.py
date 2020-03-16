@@ -138,24 +138,25 @@ def main():
 
         parameters = get_model_parameters(model)
 
-        if torch.cuda.device_count() > 1:
-            save_checkpoint({
-                'epoch': epoch,
-                'arch': cfg.model.name,
-                'state_dict': model.module.state_dict(),
-                'best_acc': best_acc,
-                'optimizer': optimizer.state_dict(),
-                'parameters': parameters,
-            }, is_best, cfg.ckp_dir, filename)
-        else:
-            save_checkpoint({
-                'epoch': epoch,
-                'arch': cfg.model.name,
-                'state_dict': model.state_dict(),
-                'best_acc': best_acc,
-                'optimizer': optimizer.state_dict(),
-                'parameters': parameters,
-            }, is_best, cfg.ckp_dir, filename)
+        if cfg.ddp.local_rank == 0:
+            if torch.cuda.device_count() > 1:
+                save_checkpoint({
+                    'epoch': epoch,
+                    'arch': cfg.model.name,
+                    'state_dict': model.module.state_dict(),
+                    'best_acc': best_acc,
+                    'optimizer': optimizer.state_dict(),
+                    'parameters': parameters,
+                }, is_best, cfg.ckp_dir, filename)
+            else:
+                save_checkpoint({
+                    'epoch': epoch,
+                    'arch': cfg.model.name,
+                    'state_dict': model.state_dict(),
+                    'best_acc': best_acc,
+                    'optimizer': optimizer.state_dict(),
+                    'parameters': parameters,
+                }, is_best, cfg.ckp_dir, filename)
 
 
 if __name__ == '__main__':

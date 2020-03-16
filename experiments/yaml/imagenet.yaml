@@ -1,7 +1,7 @@
 train:
   epoch: 180
   attention_epoch: 160
-  disp: 50
+  disp: 20
 
 model:
     name: 'SAResNet50'

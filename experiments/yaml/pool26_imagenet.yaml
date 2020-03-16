@@ -1,7 +1,7 @@
 train:
   epoch: 180
   attention_epoch: 160
-  disp: 20
+  disp: 5
 
 model:
     name: 'PoolResNet26'

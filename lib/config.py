@@ -48,7 +48,7 @@ cfg = CfgNode(dict(
         test_dir="/data/home/v-had/data_local/imagenet/val",
         mean=[0.485, 0.456, 0.406],
         std=[0.229, 0.224, 0.225],
-        batch_size=256,
+        batch_size=512,
         image_size=32,
         test_resize=256,
         workers=8,
@@ -115,3 +115,5 @@ if cfg.ddp.local_rank == 0:
             raise ValueError("Input Not Supported!")
     cfg.ckp_dir = check_dir(join(cfg.save_path, 'checkpoints'))
     cfg.log_dir = check_dir(join(cfg.save_path, 'runs'))
+else:
+    cfg.ckp_dir = join(cfg.save_path, 'checkpoints'))

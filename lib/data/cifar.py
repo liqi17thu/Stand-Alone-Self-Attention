@@ -35,19 +35,34 @@ def cifar10():
         train_sampler = None
         test_sampler = None
 
-    train_loader = torch.utils.data.DataLoader(
-        train_data,
-        batch_size=cfg.dataset.batch_size,
-        shuffle=True,
-        num_workers=cfg.dataset.workers
-    )
+    if cfg.ddp.distributed:
+        train_loader = torch.utils.data.DataLoader(
+            train_data,
+            batch_size=cfg.dataset.batch_size,
+            sampler=train_sampler,
+            num_workers=cfg.dataset.workers
+        )
 
-    test_loader = torch.utils.data.DataLoader(
-        test_data,
-        batch_size=cfg.dataset.batch_size,
-        shuffle=False,
-        num_workers=cfg.dataset.workers
-    )
+        test_loader = torch.utils.data.DataLoader(
+            test_data,
+            batch_size=cfg.dataset.batch_size,
+            sampler=test_sampler,
+            num_workers=cfg.dataset.workers
+        )
+    else:
+        train_loader = torch.utils.data.DataLoader(
+            train_data,
+            batch_size=cfg.dataset.batch_size,
+            shuffle=True,
+            num_workers=cfg.dataset.workers
+        )
+
+        test_loader = torch.utils.data.DataLoader(
+            test_data,
+            batch_size=cfg.dataset.batch_size,
+            shuffle=False,
+            num_workers=cfg.dataset.workers
+        )
 
     return [train_loader, test_loader], [train_sampler, test_sampler], 10
 
@@ -70,17 +85,43 @@ def cifar100(cfg):
         ),
     ])
 
-    train_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR100('data', train=True, download=True, transform=transform_train),
-        batch_size=cfg.dataset.batch_size,
-        shuffle=True,
-        num_workers=cfg.dataset.workers
-    )
+    train_data = datasets.CIFAR100('data', train=True, download=True, transform=transform_train)
+    test_data = datasets.CIFAR100('data', train=False, transform=transform_test)
 
-    test_loader = torch.utils.data.DataLoader(
-        datasets.CIFAR100('data', train=False, transform=transform_test),
-        batch_size=cfg.dataset.batch_size,
-        shuffle=False,
-        num_workers=cfg.dataset.workers
-    )
-    return train_loader, test_loader, 100
+    if cfg.ddp.distributed:
+        train_sampler = torch.utils.data.distributed.DistributedSampler(train_data)
+        test_sampler = torch.utils.data.distributed.DistributedSampler(test_data)
+    else:
+        train_sampler = None
+        test_sampler = None
+
+    if cfg.ddp.distributed:
+        train_loader = torch.utils.data.DataLoader(
+            train_data,
+            batch_size=cfg.dataset.batch_size,
+            sampler=train_sampler,
+            num_workers=cfg.dataset.workers
+        )
+
+        test_loader = torch.utils.data.DataLoader(
+            test_data,
+            batch_size=cfg.dataset.batch_size,
+            sampler=test_sampler,
+            num_workers=cfg.dataset.workers
+        )
+    else:
+        train_loader = torch.utils.data.DataLoader(
+            train_data,
+            batch_size=cfg.dataset.batch_size,
+            shuffle=True,
+            num_workers=cfg.dataset.workers
+        )
+
+        test_loader = torch.utils.data.DataLoader(
+            test_data,
+            batch_size=cfg.dataset.batch_size,
+            shuffle=False,
+            num_workers=cfg.dataset.workers
+        )
+
+    return [train_loader, test_loader], [train_sampler, test_sampler], 100

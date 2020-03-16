@@ -39,7 +39,7 @@ cfg = CfgNode(dict(
         epoch=100,
         attention_epoch=80,
         start_epoch=0,
-        disp=10,
+        disp=1,
     ),
     dataset=dict(
         name="cifar10",

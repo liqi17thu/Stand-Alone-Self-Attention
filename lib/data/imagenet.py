@@ -46,15 +46,26 @@ def imagenet():
         train_sampler = None
         test_sampler = None
 
-    train_loader = torch.utils.data.DataLoader(
-        train_data, batch_size=cfg.dataset.batch_size,
-        sampler=train_sampler,
-        pin_memory=True, num_workers=cfg.dataset.workers)
+    if cfg.ddp.distributed:
+        train_loader = torch.utils.data.DataLoader(
+            train_data, batch_size=cfg.dataset.batch_size,
+            sampler=train_sampler,
+            pin_memory=True, num_workers=cfg.dataset.workers)
 
-    test_loader = torch.utils.data.DataLoader(
-        test_data, batch_size=cfg.dataset.batch_size,
-        sampler=test_sampler,
-        pin_memory=True, num_workers=cfg.dataset.workers)
+        test_loader = torch.utils.data.DataLoader(
+            test_data, batch_size=cfg.dataset.batch_size,
+            sampler=test_sampler,
+            pin_memory=True, num_workers=cfg.dataset.workers)
+    else:
+        train_loader = torch.utils.data.DataLoader(
+            train_data, batch_size=cfg.dataset.batch_size,
+            shuffle=True,
+            pin_memory=True, num_workers=cfg.dataset.workers)
+
+        test_loader = torch.utils.data.DataLoader(
+            test_data, batch_size=cfg.dataset.batch_size,
+            shuffle=False,
+            pin_memory=True, num_workers=cfg.dataset.workers)
 
     return [train_loader, test_loader], [train_sampler, test_sampler], 1000
 

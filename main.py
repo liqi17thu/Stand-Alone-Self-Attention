@@ -3,6 +3,7 @@ import numpy as np
 
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
+import torch.distributed as dist
 
 from lib.config import cfg
 from lib.core.train import train
@@ -14,27 +15,39 @@ from lib.utils import CrossEntropyLabelSmooth, get_scheduler, get_net_info
 from lib.utils import save_checkpoint, get_model_parameters, get_logger, get_attention_logger
 
 if cfg.ddp.distributed:
-    try:
-        import apex
-        from apex.parallel import DistributedDataParallel as DDP
-        from apex import amp, optimizers
-        from apex.fp16_utils import *
-    except ImportError:
-        raise ImportError("Please install apex from https://www.github.com/nvidia/apex to run this example.")
+    from torch.nn.parallel import DistributedDataParallel as DDP
+    # try:
+    #     import apex
+    #     from apex.parallel import DistributedDataParallel as DDP
+    #     from apex import amp, optimizers
+    #     from apex.fp16_utils import *
+    # except ImportError:
+    #     raise ImportError("Please install apex from https://www.github.com/nvidia/apex to run this example.")
 
+
+cfg.ddp.local_rank = int(os.environ.get('OMPI_COMM_WORLD_RANK') or 0)
+cfg.ddp.word_size = int(os.environ.get('OMPI_COMM_WORLD_SIZE') or 1)
+cfg.ddp.dist_url = 'tcp://' + os.environ['MASTER_ADDR'] + ":" + os.environ['MASTER_PORT']
+
+if cfg.local_rank == 0:
+    print("rank:{0},word_size:{1},dist_url:{2}".format(cfg.ddp.local_rank, cfg.ddp.word_size, cfg.ddp.dist_url))
 
 def main():
 
     # DistributedDataParallel
     if cfg.ddp.distributed:
-        np.random.seed(cfg.ddp.seed)
+        # np.random.seed(cfg.ddp.seed)
         torch.manual_seed(cfg.ddp.seed)
         torch.cuda.manual_seed_all(cfg.ddp.seed)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-        torch.cuda.set_device(cfg.ddp.local_rank)
+        # torch.cuda.set_device(cfg.ddp.local_rank)
         torch.distributed.init_process_group(backend='nccl', init_method=cfg.ddp.dist_url,
-                                             world_size=cfg.ddp.gpus, rank=cfg.ddp.local_rank)
+                                             world_size=cfg.ddp.word_size, rank=cfg.ddp.local_rank,
+                                             group_name='mtorch')
+        gpu_id = dist.get_rank() % torch.cuda.device_count()
+        torch.cuda.set_device(gpu_id)
+
     if cfg.ddp.local_rank == 0:
         if cfg.test:
             logger = get_logger(os.path.join(cfg.save_path, 'test.log'))
@@ -106,9 +119,9 @@ def main():
 
     if cfg.cuda:
         if cfg.ddp.distributed:
-            model = model.cuda()
-            model = apex.parallel.convert_syncbn_model(model)
-            model = DDP(model, delay_allreduce=True)
+            model = model.to(torch.cuda.current_device())
+            model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
+            model = DDP(model, device_ids=[gpu_id], find_unused_parameters=True)
         elif torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)
             model = model.cuda()

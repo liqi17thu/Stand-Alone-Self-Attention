@@ -3,6 +3,7 @@ import numpy as np
 
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
+import torch.distributed as dist
 
 from lib.config import cfg
 from lib.core.train import train

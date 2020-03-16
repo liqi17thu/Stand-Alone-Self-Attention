@@ -24,13 +24,8 @@ if cfg.ddp.distributed:
     # except ImportError:
     #     raise ImportError("Please install apex from https://www.github.com/nvidia/apex to run this example.")
 
-
-cfg.ddp.local_rank = int(os.environ.get('OMPI_COMM_WORLD_RANK') or 0)
-cfg.ddp.word_size = int(os.environ.get('OMPI_COMM_WORLD_SIZE') or 1)
-cfg.ddp.dist_url = 'tcp://' + os.environ['MASTER_ADDR'] + ":" + os.environ['MASTER_PORT']
-
-if cfg.local_rank == 0:
-    print("rank:{0},word_size:{1},dist_url:{2}".format(cfg.ddp.local_rank, cfg.ddp.word_size, cfg.ddp.dist_url))
+if cfg.ddp.local_rank == 0:
+    print("rank:{0},word_size:{1},dist_url:{2}".format(cfg.ddp.local_rank, cfg.ddp.gpus, cfg.ddp.dist_url))
 
 def main():
 
@@ -43,7 +38,7 @@ def main():
         torch.backends.cudnn.benchmark = False
         # torch.cuda.set_device(cfg.ddp.local_rank)
         torch.distributed.init_process_group(backend='nccl', init_method=cfg.ddp.dist_url,
-                                             world_size=cfg.ddp.word_size, rank=cfg.ddp.local_rank,
+                                             world_size=cfg.ddp.gpus, rank=cfg.ddp.local_rank,
                                              group_name='mtorch')
         gpu_id = dist.get_rank() % torch.cuda.device_count()
         torch.cuda.set_device(gpu_id)
@@ -120,7 +115,7 @@ def main():
     if cfg.cuda:
         if cfg.ddp.distributed:
             model = model.to(torch.cuda.current_device())
-            model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
+            # model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
             model = DDP(model, device_ids=[gpu_id], find_unused_parameters=True)
         elif torch.cuda.device_count() > 1:
             model = nn.DataParallel(model)

@@ -90,8 +90,7 @@ def main():
         best_acc = checkpoint['best_acc']
         model_parameters = checkpoint['parameters']
         if cfg.ddp.local_rank == 0:
-            print('Load model, Parameters: {0}, Start_epoch: {1}, Acc: {2}'.format(model_parameters, start_epoch, best_acc))
-            logger.info('Load model, Parameters: {0}, Start_epoch: {1}, Acc: {2}'.format(model_parameters, start_epoch, best_acc))
+            logger.info('Best Epoch: {0}, Best Acc: {1:.1%}'.format(start_epoch, best_acc))
     else:
         start_epoch = cfg.train.start_epoch
         best_acc = 0.0

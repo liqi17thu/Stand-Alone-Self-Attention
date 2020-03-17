@@ -1,3 +1,4 @@
+auto_resume: True
 train:
   epoch: 180
   attention_epoch: 160
@@ -6,6 +7,7 @@ train:
 model:
     name: 'SAResNet50'
     stem: 'imagenet_conv'
+    pre_trained: True
 
 dataset:
   name: 'imagenet'

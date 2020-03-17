@@ -64,7 +64,7 @@ cfg = CfgNode(dict(
         sgd_params=dict(
             lr=0.5,
             momentum=0.9,
-            weight_decay=0.0001,
+            weight_decay=0.0007,
         ),
         adam_params=dict(
             lr=3e-3,
@@ -114,8 +114,8 @@ if cfg.ddp.local_rank == 0:
             else:
                 raise ValueError("Save directory already exists")
         elif key == 'y':
-            shutil.rmtree(cfg.save_path)
-            os.mkdir(cfg.save_path)
+        shutil.rmtree(cfg.save_path)
+        os.mkdir(cfg.save_path)
         else:
             raise ValueError("Input Not Supported!")
     cfg.ckp_dir = check_dir(join(cfg.save_path, 'checkpoints'))

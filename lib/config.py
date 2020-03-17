@@ -100,22 +100,19 @@ if cfg.ddp.local_rank == 0:
     if cfg.test_name == 'default':
         cfg.test_path = join(cfg.save_path, args.name)
     else:
-        cfg.test_path = checkdir(join(cfg.save_path, cfg.test_name))
+        cfg.test_path = check_dir(join(cfg.save_path, cfg.test_name))
 
     cfg.save_path = join(cfg.save_path, args.name)
 
     if not os.path.exists(cfg.save_path):
         os.mkdir(cfg.save_path)
-    elif not cfg.test:
+    elif not cfg.test or not cfg.auto_resume:
         key = input('Delete Existing Directory [y/n]: ')
         if key == 'n':
-            if cfg.auto_resume:
-                pass
-            else:
-                raise ValueError("Save directory already exists")
+            raise ValueError("Save directory already exists")
         elif key == 'y':
-        shutil.rmtree(cfg.save_path)
-        os.mkdir(cfg.save_path)
+            shutil.rmtree(cfg.save_path)
+            os.mkdir(cfg.save_path)
         else:
             raise ValueError("Input Not Supported!")
     cfg.ckp_dir = check_dir(join(cfg.save_path, 'checkpoints'))

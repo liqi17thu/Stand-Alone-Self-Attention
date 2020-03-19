@@ -74,8 +74,6 @@ def main():
                                      num_resblock=cfg.model.num_resblock,
                                      attention_logger=attention_logger)
 
-    get_net_info(model, (3, cfg.dataset.image_size, cfg.dataset.image_size),
-                 logger=logger, local_rank=cfg.ddp.local_rank)
 
     if cfg.model.pre_trained:
         filename = 'best_model_' + str(cfg.dataset.name) + '_' + \
@@ -84,6 +82,13 @@ def main():
             print('filename :: ', filename)
         file_path = os.path.join(cfg.test_path, 'checkpoints', filename)
         checkpoint = torch.load(file_path)
+
+        state_dict = checkpoint['state_dict']
+
+        keys = state_dict.copy().keys()
+        for key in keys:
+            if 'total_ops' in key or 'total_params' in key:
+                del state_dict[key]
 
         model.load_state_dict(checkpoint['state_dict'])
         start_epoch = checkpoint['epoch']
@@ -94,6 +99,9 @@ def main():
     else:
         start_epoch = cfg.train.start_epoch
         best_acc = 0.0
+
+    get_net_info(model, (3, cfg.dataset.image_size, cfg.dataset.image_size),
+                 logger=logger, local_rank=cfg.ddp.local_rank)
 
     if cfg.crit.smooth > 0:
         criterion = CrossEntropyLabelSmooth(num_classes=num_classes, epsilon=cfg.crit.smooth)

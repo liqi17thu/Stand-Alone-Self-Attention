@@ -2,11 +2,10 @@
 train:
   epoch: 180
   attention_epoch: 160
-  disp: 5
+  disp: 10
 
 model:
-    name: 'PoolResNet26'
-    stem: 'imagenet_conv'
+    name: 'MobileNetV3'
     # pre_trained: True
 
 dataset:
@@ -14,7 +13,7 @@ dataset:
   train_dir: './data/imagenet/train'
   test_dir: './data/imagenet/val'
   image_size: 224
-  batch_size: 300
+  batch_size: 256
 
 optim:
   sgd_params:

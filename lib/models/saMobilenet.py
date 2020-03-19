@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 
+from lib.config import cfg
+
 __all__ = ['MobileNetV3']
 
 
@@ -34,12 +36,12 @@ class MobileNetV3(nn.Module):
             # refer to Table 1 in paper
             mobile_setting = [
                 # k, exp, c,  se,     nl,       s, sa
-                [3, 16,  16,  False, 'relu',    1, False],
-                [3, 64,  24,  False, 'relu',    2, False],
-                [3, 72,  24,  False, 'relu',    1, False],
-                [5, 72,  40,  True,  'relu',    2, False],
-                [5, 120, 40,  True,  'relu',    1, False],
-                [5, 120, 40,  True,  'relu',    1, False],
+                [3, 16,  16,  False, 'relu',    1, True],
+                [3, 64,  24,  False, 'relu',    2, True],
+                [3, 72,  24,  False, 'relu',    1, True],
+                [5, 72,  40,  True,  'relu',    2, True],
+                [5, 120, 40,  True,  'relu',    1, True],
+                [5, 120, 40,  True,  'relu',    1, True],
                 [7, 240, 80,  False, 'h_swish', 2, True],
                 [7, 200, 80,  False, 'h_swish', 1, True],
                 [7, 184, 80,  False, 'h_swish', 1, True],
@@ -50,6 +52,10 @@ class MobileNetV3(nn.Module):
                 [7, 960, 160, True,  'h_swish', 1, True],
                 [7, 960, 160, True,  'h_swish', 1, True],
             ]
+
+            for i in range(cfg.model.num_resblock):
+                mobile_setting[i][6] = False
+
         elif mode == 'small':
             # refer to Table 2 in paper
             mobile_setting = [
@@ -130,5 +136,3 @@ class MobileNetV3(nn.Module):
                 nn.init.normal_(m.weight, 0, 0.01)
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
-
-

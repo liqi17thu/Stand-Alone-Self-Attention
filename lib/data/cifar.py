@@ -2,20 +2,33 @@ import torch
 from torchvision import datasets, transforms
 
 from lib.config import cfg
-
+from lib.data.data_util import CIFAR10Policy
 
 def cifar10():
     if cfg.ddp.local_rank == 0:
         print('Load Dataset :: {}'.format(cfg.dataset.name))
-    transform_train = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=cfg.dataset.mean,
-            std=cfg.dataset.std
-        )
-    ])
+
+    if cfg.dataset.use_aa:
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            CIFAR10Policy(),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=cfg.dataset.mean,
+                std=cfg.dataset.std
+            )
+        ])
+    else:
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=cfg.dataset.mean,
+                std=cfg.dataset.std
+            )
+        ])
 
     transform_test = transforms.Compose([
         transforms.ToTensor(),
@@ -68,15 +81,29 @@ def cifar10():
 
 
 def cifar100(cfg):
-    transform_train = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(
-            mean=cfg.dataset.mean,
-            std=cfg.dataset.std
-        ),
-    ])
+
+    if cfg.dataset.use_aa:
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            CIFAR10Policy(),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=cfg.dataset.mean,
+                std=cfg.dataset.std
+            )
+        ])
+    else:
+        transform_train = transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=cfg.dataset.mean,
+                std=cfg.dataset.std
+            )
+        ])
+
     transform_test = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(

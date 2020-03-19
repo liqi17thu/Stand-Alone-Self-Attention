@@ -1,21 +1,20 @@
-# auto_resume: True
 train:
   epoch: 180
   attention_epoch: 160
-  disp: 10
+  disp: 20
 
 model:
-    name: 'MobileNetV3'
-    num_resblock: 6
-    # pre_trained: True
+    name: 'SAResNet50'
+    stem: 'imagenet_conv'
+    num_resblock: 4
 
 dataset:
   name: 'imagenet'
   train_dir: './data/imagenet/train'
   test_dir: './data/imagenet/val'
   image_size: 224
-  batch_size: 256
+  batch_size: 300
 
 optim:
   sgd_params:
-    lr: 0.6
+    lr: 0.2

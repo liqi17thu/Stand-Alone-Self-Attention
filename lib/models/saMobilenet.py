@@ -33,22 +33,22 @@ class MobileNetV3(nn.Module):
         if mode == 'large':
             # refer to Table 1 in paper
             mobile_setting = [
-                # k, exp, c,  se,     nl,  s, sa
-                [3, 16,  16,  False, 'RE', 1, False],
-                [3, 64,  24,  False, 'RE', 2, False],
-                [3, 72,  24,  False, 'RE', 1, False],
-                [5, 72,  40,  True,  'RE', 2, False],
-                [5, 120, 40,  True,  'RE', 1, False],
-                [5, 120, 40,  True,  'RE', 1, False],
-                [7, 240, 80,  False, 'HS', 2, True],
-                [7, 200, 80,  False, 'HS', 1, True],
-                [7, 184, 80,  False, 'HS', 1, True],
-                [7, 184, 80,  False, 'HS', 1, True],
-                [7, 480, 112, True,  'HS', 1, True],
-                [7, 672, 112, True,  'HS', 1, True],
-                [7, 672, 160, True,  'HS', 2, True],
-                [7, 960, 160, True,  'HS', 1, True],
-                [7, 960, 160, True,  'HS', 1, True],
+                # k, exp, c,  se,     nl,       s, sa
+                [3, 16,  16,  False, 'relu',    1, False],
+                [3, 64,  24,  False, 'relu',    2, False],
+                [3, 72,  24,  False, 'relu',    1, False],
+                [5, 72,  40,  True,  'relu',    2, False],
+                [5, 120, 40,  True,  'relu',    1, False],
+                [5, 120, 40,  True,  'relu',    1, False],
+                [7, 240, 80,  False, 'h_swish', 2, True],
+                [7, 200, 80,  False, 'h_swish', 1, True],
+                [7, 184, 80,  False, 'h_swish', 1, True],
+                [7, 184, 80,  False, 'h_swish', 1, True],
+                [7, 480, 112, True,  'h_swish', 1, True],
+                [7, 672, 112, True,  'h_swish', 1, True],
+                [7, 672, 160, True,  'h_swish', 2, True],
+                [7, 960, 160, True,  'h_swish', 1, True],
+                [7, 960, 160, True,  'h_swish', 1, True],
             ]
         elif mode == 'small':
             # refer to Table 2 in paper

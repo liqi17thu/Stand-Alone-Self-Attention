@@ -89,7 +89,7 @@ cfg.merge_from_list(unknown)
 if cfg.ddp.distributed:
     cfg.ddp.local_rank = args.local_rank
     cfg.ddp.local_rank = cfg.ddp.local_rank % cfg.ddp.gpus
-    cfg.ddp.dist_url = 'tcp://' + os.environ['MASTER_ADDR'] + ":" + os.environ['MASTER_PORT']
+    # cfg.ddp.dist_url = 'tcp://' + os.environ['MASTER_ADDR'] + ":" + os.environ['MASTER_PORT']
     # cfg.ddp.local_rank = int(os.environ.get('OMPI_COMM_WORLD_RANK') or 0)
     # cfg.ddp.word_size = int(os.environ.get('OMPI_COMM_WORLD_SIZE') or 1)
 

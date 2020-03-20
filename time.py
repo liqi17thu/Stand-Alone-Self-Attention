@@ -4,7 +4,9 @@ from lib.models.units.saUnit import SAConv
 from torch.autograd import Variable
 from lib.models.units.utils import get_same_padding
 from lib.config import cfg
+from lib.utils import get_logger, get_net_info
 
+import os
 import time
 
 class SANet(nn.Module):
@@ -43,7 +45,7 @@ class PoolingNet(nn.Module):
         return self.pooling(x)
 
 
-def time_counting(x, Net, kernel=3, heads=8, gpu=False, dryrun=False):
+def time_counting(x, Net, kernel=3, heads=8, gpu=False, dryrun=False, logger=None):
     xx = Variable(x.data.clone(), requires_grad=True)
     b, c, h, w = xx.shape
     pad = get_same_padding(kernel)
@@ -53,49 +55,54 @@ def time_counting(x, Net, kernel=3, heads=8, gpu=False, dryrun=False):
         xx = xx.cuda()
         net = net.cuda()
 
-    print(f'{net.__class__.__name__}:')
+    if not dryrun:
+        logger.info(f'{net.__class__.__name__}:')
     if not gpu:
-        print('forward:')
+        logger.info('forward:')
         with torch.autograd.profiler.profile() as prof:
             for _ in range(10):
                 xx = net(xx)
-        print(prof.key_averages().table(sort_by="self_cpu_time_total"))
+        logger.info(prof.key_averages().table(sort_by="self_cpu_time_total"))
 
-        print('backward:')
+        logger.info('backward:')
         with torch.autograd.profiler.profile() as prof:
             xx = xx.mean(3).mean(2).mean(1).mean(0)
             xx.backward()
-        print(prof.key_averages().table(sort_by="self_cpu_time_total"))
+        logger.info(prof.key_averages().table(sort_by="self_cpu_time_total"))
     else:
         if not dryrun:
-            print('forward:')
+            logger.info('forward:')
         with torch.autograd.profiler.profile(use_cuda=True) as prof:
             for _ in range(100):
                 xx = net(xx)
         if not dryrun:
-            print(prof.key_averages().table(sort_by="cuda_time"))
+            logger.info(prof.key_averages().table(sort_by="cuda_time"))
 
         if not dryrun:
-            print('backward:')
+            logger.info('backward:')
         with torch.autograd.profiler.profile(use_cuda=True) as prof:
             xx = xx.mean(3).mean(2).mean(1).mean(0)
             xx.backward()
         if not dryrun:
-            print(prof.key_averages().table(sort_by="cuda_time"))
+            logger.info(prof.key_averages().table(sort_by="cuda_time"))
 
+    get_net_info(net, (160, 32, 32), logger=logger)
+
+
+logger = get_logger(os.path.join(cfg.save_path, 'net_info.log'))
 
 # input
 x = torch.rand(3, 160, 32, 32)
 
 if cfg.cuda:
-    time_counting(x, SANet, gpu=True, dryrun=True)
-    time_counting(x, SANet, gpu=True)
-    time_counting(x, ConvNet, gpu=True)
-    time_counting(x, SPConvNet, gpu=True)
-    time_counting(x, PoolingNet, gpu=True)
+    time_counting(x, SANet, gpu=True, dryrun=True, logger=logger)
+    time_counting(x, SANet, gpu=True, logger=logger)
+    time_counting(x, ConvNet, gpu=True, logger=logger)
+    time_counting(x, SPConvNet, gpu=True, logger=logger)
+    time_counting(x, PoolingNet, gpu=True, logger=logger)
 else:
-    time_counting(x, SANet)
-    time_counting(x, ConvNet)
-    time_counting(x, SPConvNet)
-    time_counting(x, PoolingNet)
+    time_counting(x, SANet, logger=logger)
+    time_counting(x, ConvNet, logger=logger)
+    time_counting(x, SPConvNet, logger=logger)
+    time_counting(x, PoolingNet, logger=logger)
 

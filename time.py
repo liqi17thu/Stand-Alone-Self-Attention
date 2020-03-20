@@ -1,12 +1,14 @@
+import os
+
 import torch
 import torch.nn as nn
-from lib.models.units.saUnit import SAConv
 from torch.autograd import Variable
-from lib.models.units.utils import get_same_padding
+
 from lib.config import cfg
+from lib.models.units.saUnit import SAConv
+from lib.models.units.utils import get_same_padding
 from lib.utils import get_logger, get_net_info
 
-import os
 
 class SANet(nn.Module):
     def __init__(self, inplanes, planes, kernel, padding, heads):
@@ -85,7 +87,12 @@ def time_counting(x, Net, kernel=3, heads=8, gpu=False, dryrun=False, logger=Non
         if not dryrun:
             logger.info(prof.key_averages().table(sort_by="cuda_time"))
 
-    get_net_info(net, (160, 32, 32), logger=logger)
+    if gpu:
+        get_net_info(net, (160, 32, 32), logger=logger, device='cuda:0')
+    else:
+        get_net_info(net, (160, 32, 32), logger=logger, device='cpu')
+
+    logger.info('*' * 30)
 
 
 logger = get_logger(os.path.join(cfg.save_path, 'net_info.log'), False)
@@ -93,18 +100,14 @@ logger = get_logger(os.path.join(cfg.save_path, 'net_info.log'), False)
 # input
 x = torch.rand(3, 160, 32, 32)
 
-# if cfg.cuda:
-#     time_counting(x, SANet, gpu=True, dryrun=True, logger=logger)
-#     time_counting(x, SANet, gpu=True, logger=logger)
-#     time_counting(x, ConvNet, gpu=True, logger=logger)
-#     time_counting(x, SPConvNet, gpu=True, logger=logger)
-#     time_counting(x, PoolingNet, gpu=True, logger=logger)
-# else:
-#     time_counting(x, SANet, logger=logger)
-#     time_counting(x, ConvNet, logger=logger)
-#     time_counting(x, SPConvNet, logger=logger)
-#     time_counting(x, PoolingNet, logger=logger)
-
-net = PoolingNet(1, 1, 1, 1, 1)
-
-print(net.parameters().__next__)
+if cfg.cuda:
+    time_counting(x, SANet, gpu=True, dryrun=True, logger=logger)
+    time_counting(x, SANet, gpu=True, logger=logger)
+    time_counting(x, ConvNet, gpu=True, logger=logger)
+    time_counting(x, SPConvNet, gpu=True, logger=logger)
+    time_counting(x, PoolingNet, gpu=True, logger=logger)
+else:
+    time_counting(x, SANet, logger=logger)
+    time_counting(x, ConvNet, logger=logger)
+    time_counting(x, SPConvNet, logger=logger)
+    time_counting(x, PoolingNet, logger=logger)

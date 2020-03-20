@@ -93,15 +93,18 @@ logger = get_logger(os.path.join(cfg.save_path, 'net_info.log'), False)
 # input
 x = torch.rand(3, 160, 32, 32)
 
-if cfg.cuda:
-    time_counting(x, SANet, gpu=True, dryrun=True, logger=logger)
-    time_counting(x, SANet, gpu=True, logger=logger)
-    time_counting(x, ConvNet, gpu=True, logger=logger)
-    time_counting(x, SPConvNet, gpu=True, logger=logger)
-    time_counting(x, PoolingNet, gpu=True, logger=logger)
-else:
-    time_counting(x, SANet, logger=logger)
-    time_counting(x, ConvNet, logger=logger)
-    time_counting(x, SPConvNet, logger=logger)
-    time_counting(x, PoolingNet, logger=logger)
+# if cfg.cuda:
+#     time_counting(x, SANet, gpu=True, dryrun=True, logger=logger)
+#     time_counting(x, SANet, gpu=True, logger=logger)
+#     time_counting(x, ConvNet, gpu=True, logger=logger)
+#     time_counting(x, SPConvNet, gpu=True, logger=logger)
+#     time_counting(x, PoolingNet, gpu=True, logger=logger)
+# else:
+#     time_counting(x, SANet, logger=logger)
+#     time_counting(x, ConvNet, logger=logger)
+#     time_counting(x, SPConvNet, logger=logger)
+#     time_counting(x, PoolingNet, logger=logger)
 
+net = PoolingNet(1, 1, 1, 1, 1)
+
+print(net.parameters().__next__)

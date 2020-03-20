@@ -87,12 +87,13 @@ def time_counting(x, Net, kernel=3, heads=8, gpu=False, dryrun=False, logger=Non
         if not dryrun:
             logger.info(prof.key_averages().table(sort_by="cuda_time"))
 
-    if gpu:
-        get_net_info(net, (160, 32, 32), logger=logger, device='cuda:0')
-    else:
-        get_net_info(net, (160, 32, 32), logger=logger, device='cpu')
+    if not dryrun:
+        if gpu:
+            get_net_info(net, (160, 32, 32), logger=logger, device='cuda:0')
+        else:
+            get_net_info(net, (160, 32, 32), logger=logger, device='cpu')
 
-    logger.info('*' * 30)
+        logger.info('*' * 100)
 
 
 logger = get_logger(os.path.join(cfg.save_path, 'net_info.log'), False)

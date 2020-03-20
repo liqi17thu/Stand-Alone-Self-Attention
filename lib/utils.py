@@ -268,7 +268,7 @@ def profile(model, input_size, custom_ops=None, device=None):
             handler_collection.append(_handler)
 
     if device != None:
-        original_device = device
+        original_device = torch.device(device)
     else:
         original_device = model.parameters().__next__().device
     training = model.training
@@ -304,7 +304,7 @@ def count_net_flops(net, data_shape=(1, 3, 224, 224), device=None):
 
     # net = copy.deepcopy(net)
 
-    flop, _ = profile(net, data_shape, device)
+    flop, _ = profile(net, data_shape, device=device)
     return flop
 
 
@@ -384,7 +384,7 @@ def get_net_info(net, input_shape=(3, 224, 224), measure_latency=None, logger=No
     net_info['params'] = count_parameters(net)
 
     # flops
-    net_info['flops'] = count_net_flops(net, [1] + list(input_shape))
+    net_info['flops'] = count_net_flops(net, [1] + list(input_shape), device=device)
 
     # latencies
     latency_types = [] if measure_latency is None else measure_latency.split('#')
@@ -396,7 +396,7 @@ def get_net_info(net, input_shape=(3, 224, 224), measure_latency=None, logger=No
         }
 
     if local_rank == 0:
-        logger.info('Total training params: %.2fM' % (net_info['params'] / 1e6))
-        logger.info('Total FLOPs: %.2fM' % (net_info['flops'] / 1e6))
+        logger.info('Total training params: %.4fM' % (net_info['params'] / 1e6))
+        logger.info('Total FLOPs: %.4fM' % (net_info['flops'] / 1e6))
         for l_type in latency_types:
             logger.info('Estimated %s latency: %.3fms' % (l_type, net_info['%s latency' % l_type]['val']))

@@ -7,7 +7,6 @@ from lib.config import cfg
 from lib.utils import get_logger, get_net_info
 
 import os
-import time
 
 class SANet(nn.Module):
     def __init__(self, inplanes, planes, kernel, padding, heads):
@@ -89,7 +88,7 @@ def time_counting(x, Net, kernel=3, heads=8, gpu=False, dryrun=False, logger=Non
     get_net_info(net, (160, 32, 32), logger=logger)
 
 
-logger = get_logger(os.path.join(cfg.save_path, 'net_info.log'))
+logger = get_logger(os.path.join(cfg.save_path, 'net_info.log'), False)
 
 # input
 x = torch.rand(3, 160, 32, 32)

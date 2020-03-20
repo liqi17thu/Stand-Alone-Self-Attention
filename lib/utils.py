@@ -103,10 +103,13 @@ def int2list(val, repeat_time=1):
         return [val for _ in range(repeat_time)]
 
 
-def get_logger(file_path):
+def get_logger(file_path, time=True):
     """ Make python logger """
     logger = logging.getLogger("train")
-    log_format = '%(asctime)s | %(message)s'
+    if time:
+        log_format = '%(asctime)s | %(message)s'
+    else:
+        log_format = '%(message)s'
     formatter = logging.Formatter(log_format, datefmt='%m/%d %I:%M:%S %p')
     file_handler = logging.FileHandler(file_path)
     file_handler.setFormatter(formatter)
@@ -231,6 +234,7 @@ register_hooks = {
     nn.Dropout2d: None,
     nn.Dropout3d: None,
     nn.BatchNorm2d: None,
+    nn.AvgPool2d: None,
 }
 
 def profile(model, input_size, custom_ops=None):

@@ -2,3 +2,13 @@ auto_resume: True
 test: True
 model:
   pre_trained: True
+
+train:
+    disp: 1
+
+dataset:
+  name: 'imagenet'
+  train_dir: './data/imagenet/train'
+  test_dir: './data/imagenet/val'
+  image_size: 224
+  batch_size: 3000

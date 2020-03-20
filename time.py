@@ -52,21 +52,33 @@ def time_counting(x, Net, kernel=3, heads=8, gpu=False):
         xx = xx.cuda()
         net = net.cuda()
 
-    s = time.time()
-    for _ in range(100):
-        xx = net(xx)
-    e = time.time()
-    print(f'{net.__class__.__name__} forward: {(e - s):.2E}s')
+    # s = time.time()
+    # for _ in range(100):
+    #     xx = net(xx)
+    # e = time.time()
+    # print(f'{net.__class__.__name__} forward: {(e - s):.2E}s')
 
-    s = time.time()
-    xx = xx.mean(3).mean(2).mean(1).mean(0)
-    xx.backward()
-    e = time.time()
-    print(f'{net.__class__.__name__} backward: {(e - s):.2E}s')
+    # s = time.time()
+    # xx = xx.mean(3).mean(2).mean(1).mean(0)
+    # xx.backward()
+    # e = time.time()
+    # print(f'{net.__class__.__name__} backward: {(e - s):.2E}s')
+
+    print(f'{net.__class__.__name__}:')
+    print('forward:')
+    with torch.autograd.profiler.profile() as prof:
+        for _ in range(10):
+            xx = net(xx)
+    print(prof.key_averages().table(sort_by="self_cpu_time_total"))
+
+    print('backward:')
+    with torch.autograd.profiler.profile() as prof:
+        xx = xx.mean(3).mean(2).mean(1).mean(0)
+        xx.backward()
+    print(prof.key_averages().table(sort_by="self_cpu_time_total"))
+
 
 # input
 x = torch.rand(3, 160, 32, 32)
 
-time_counting(x, SPConvNet)
-time_counting(x, PoolingNet)
-
+time_counting(x, SANet)

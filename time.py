@@ -3,6 +3,7 @@ import torch.nn as nn
 from lib.models.units.saUnit import SAConv
 from torch.autograd import Variable
 from lib.models.units.utils import get_same_padding
+from lib.config import cfg
 
 import time
 
@@ -42,7 +43,7 @@ class PoolingNet(nn.Module):
         return self.pooling(x)
 
 
-def time_counting(x, Net, kernel=3, heads=8, gpu=False):
+def time_counting(x, Net, kernel=3, heads=8, gpu=False, dryrun=False):
     xx = Variable(x.data.clone(), requires_grad=True)
     b, c, h, w = xx.shape
     pad = get_same_padding(kernel)
@@ -52,33 +53,49 @@ def time_counting(x, Net, kernel=3, heads=8, gpu=False):
         xx = xx.cuda()
         net = net.cuda()
 
-    # s = time.time()
-    # for _ in range(100):
-    #     xx = net(xx)
-    # e = time.time()
-    # print(f'{net.__class__.__name__} forward: {(e - s):.2E}s')
-
-    # s = time.time()
-    # xx = xx.mean(3).mean(2).mean(1).mean(0)
-    # xx.backward()
-    # e = time.time()
-    # print(f'{net.__class__.__name__} backward: {(e - s):.2E}s')
-
     print(f'{net.__class__.__name__}:')
-    print('forward:')
-    with torch.autograd.profiler.profile() as prof:
-        for _ in range(10):
-            xx = net(xx)
-    print(prof.key_averages().table(sort_by="self_cpu_time_total"))
+    if not gpu:
+        print('forward:')
+        with torch.autograd.profiler.profile() as prof:
+            for _ in range(10):
+                xx = net(xx)
+        print(prof.key_averages().table(sort_by="self_cpu_time_total"))
 
-    print('backward:')
-    with torch.autograd.profiler.profile() as prof:
-        xx = xx.mean(3).mean(2).mean(1).mean(0)
-        xx.backward()
-    print(prof.key_averages().table(sort_by="self_cpu_time_total"))
+        print('backward:')
+        with torch.autograd.profiler.profile() as prof:
+            xx = xx.mean(3).mean(2).mean(1).mean(0)
+            xx.backward()
+        print(prof.key_averages().table(sort_by="self_cpu_time_total"))
+    else:
+        if not dryrun:
+            print('forward:')
+        with torch.autograd.profiler.profile(use_cuda=True) as prof:
+            for _ in range(100):
+                xx = net(xx)
+        if not dryrun:
+            print(prof.key_averages().table(sort_by="cuda_time"))
+
+        if not dryrun:
+            print('backward:')
+        with torch.autograd.profiler.profile(use_cuda=True) as prof:
+            xx = xx.mean(3).mean(2).mean(1).mean(0)
+            xx.backward()
+        if not dryrun:
+            print(prof.key_averages().table(sort_by="cuda_time"))
 
 
 # input
 x = torch.rand(3, 160, 32, 32)
 
-time_counting(x, SANet)
+if cfg.cuda:
+    time_counting(x, SANet, gpu=True, dryrun=True)
+    time_counting(x, SANet, gpu=True)
+    time_counting(x, ConvNet, gpu=True)
+    time_counting(x, SPConvNet, gpu=True)
+    time_counting(x, PoolingNet, gpu=True)
+else:
+    time_counting(x, SANet)
+    time_counting(x, ConvNet)
+    time_counting(x, SPConvNet)
+    time_counting(x, PoolingNet)
+

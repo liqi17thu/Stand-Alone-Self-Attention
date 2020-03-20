@@ -64,8 +64,7 @@ def main():
     if cfg.ddp.local_rank == 0:
         print('Model Name: {0}'.format(cfg.model.name))
     if cfg.model.name == "MobileNetV3":
-        model = MobileNetV3(n_class=num_classes, input_size=cfg.dataset.image_size, mode='large',
-                            logger=attention_logger)
+        model = MobileNetV3(n_class=num_classes)
     else:
         model = eval(cfg.model.name)(num_classes=num_classes,
                                      heads=cfg.model.heads,
@@ -93,7 +92,6 @@ def main():
         model.load_state_dict(checkpoint['state_dict'])
         start_epoch = checkpoint['epoch']
         best_acc = checkpoint['best_acc']
-        model_parameters = checkpoint['parameters']
         if cfg.ddp.local_rank == 0:
             logger.info('Best Epoch: {0}, Best Acc: {1:.1%}'.format(start_epoch, best_acc))
     else:
@@ -149,8 +147,6 @@ def main():
         if cfg.ddp.local_rank == 0:
             print('filename :: ', filename)
 
-        parameters = get_model_parameters(model)
-
         if cfg.ddp.local_rank == 0:
             if torch.cuda.device_count() > 1:
                 save_checkpoint({
@@ -159,7 +155,6 @@ def main():
                     'state_dict': model.module.state_dict(),
                     'best_acc': best_acc,
                     'optimizer': optimizer.state_dict(),
-                    'parameters': parameters,
                 }, is_best, cfg.ckp_dir, filename)
             else:
                 save_checkpoint({
@@ -168,7 +163,6 @@ def main():
                     'state_dict': model.state_dict(),
                     'best_acc': best_acc,
                     'optimizer': optimizer.state_dict(),
-                    'parameters': parameters,
                 }, is_best, cfg.ckp_dir, filename)
 
 

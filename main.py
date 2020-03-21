@@ -100,8 +100,10 @@ def main():
         model.load_state_dict(checkpoint['state_dict'])
         start_epoch = checkpoint['epoch']
         best_acc = checkpoint['best_acc']
-        optimizer.load_state_dict(checkpoint['optimizer'])
-        scheduler.load_state_dict(checkpoint['scheduler'])
+
+        if cfg.auto_resume:
+            optimizer.load_state_dict(checkpoint['optimizer'])
+            scheduler.load_state_dict(checkpoint['scheduler'])
         if cfg.ddp.local_rank == 0:
             logger.info('Best Epoch: {0}, Best Acc: {1:.1%}'.format(start_epoch, best_acc))
     else:
@@ -129,7 +131,7 @@ def main():
         criterion = criterion.cuda()
 
     if cfg.test:
-        _ = validate(model, test_loader, criterion, start_epoch, logger, attention_logger, writer)
+        _ = validate(model, test_loader, criterion, start_epoch, logger, writer)
         return
 
     for epoch in range(start_epoch, cfg.train.epoch + 1):

@@ -31,20 +31,16 @@ class MixedConv2d(nn.ModuleDict):
             conv_groups = out_ch if depthwise else 1
             # use add_module to keep key space clean
             padding = get_same_padding(k)
-            self.add_module(
-                str(idx),
-                nn.Conv2d(in_ch, out_ch, k, stride=stride, padding=padding, groups=conv_groups)
-            )
-            # if k <= 5:
-            #     self.add_module(
-            #         str(idx),
-            #         nn.Conv2d(in_ch, out_ch, k, stride=stride, padding=padding, groups=conv_groups)
-            #     )
-            # else:
-            #     self.add_module(
-            #         str(idx),
-            #         nn.AvgPool2d(k, stride=stride, padding=padding)
-            #     )
+            if k <= 5:
+                self.add_module(
+                    str(idx),
+                    nn.Conv2d(in_ch, out_ch, k, stride=stride, padding=padding, groups=conv_groups)
+                )
+            else:
+                self.add_module(
+                    str(idx),
+                    nn.AvgPool2d(k, stride=stride, padding=padding)
+                )
         self.splits = in_splits
 
     def forward(self, x):

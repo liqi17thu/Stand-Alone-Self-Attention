@@ -1,15 +1,15 @@
 import numpy as np
 
-def get_attention(path, epoch, layer, block, head, height, width, kernel):
+def get_attention(path, layer, block, head, height, width, kernel):
     with open(path, 'r') as f:
         text = f.readlines()
     
     i = 0
     length = len(text)
-    while i < length:
-        if f'Epoch {epoch}' in text[i]:
-            break
-        i += 1
+    # while i < length:
+    #     if f'Epoch {epoch}' in text[i]:
+    #         break
+    #     i += 1
     while i  < length:
         if f'layer {layer}' in text[i]:
             break

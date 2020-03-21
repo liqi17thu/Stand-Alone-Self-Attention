@@ -1,7 +1,4 @@
-auto_resume: True
 test: True
-model:
-  pre_trained: True
 
 train:
     disp: 1

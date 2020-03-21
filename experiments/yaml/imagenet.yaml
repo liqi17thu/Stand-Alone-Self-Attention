@@ -7,7 +7,6 @@ train:
 model:
     name: 'SAResNet50'
     stem: 'imagenet_conv'
-    pre_trained: True
 
 dataset:
   name: 'imagenet'

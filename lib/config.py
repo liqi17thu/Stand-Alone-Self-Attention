@@ -29,7 +29,6 @@ cfg = CfgNode(dict(
         heads=8,
         kernel=7,
         expansion=4,
-        pre_trained=False,
         num_resblock=2,
         with_conv=False,
         encoding='learnable',
@@ -38,7 +37,7 @@ cfg = CfgNode(dict(
         rezero=False,
     ),
     train=dict(
-        epoch=100,
+        epoch=150,
         attention_epoch=80,
         start_epoch=0,
         disp=1,

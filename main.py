@@ -74,7 +74,7 @@ def main():
                                      attention_logger=attention_logger)
 
 
-    if cfg.model.pre_trained:
+    if cfg.auto_resume or cfg.test:
         filename = 'best_model_' + str(cfg.dataset.name) + '_' + \
                    str(cfg.model.name) + '_' + str(cfg.model.stem) + '_ckpt.tar'
         if cfg.ddp.local_rank == 0:

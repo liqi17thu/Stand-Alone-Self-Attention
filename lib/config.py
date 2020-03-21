@@ -35,6 +35,7 @@ cfg = CfgNode(dict(
         encoding='learnable',
         temperature=1.0,
         r_dim=256,
+        rezero=False,
     ),
     train=dict(
         epoch=100,

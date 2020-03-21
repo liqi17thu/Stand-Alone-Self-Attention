@@ -361,6 +361,9 @@ class SABottleneck(nn.Module):
         self.kernel_size = kernel_size
         self.with_conv = cfg.model.with_conv
         self.expansion = expansion
+        self.rezero = cfg.model.rezero
+        if self.rezero:
+            self.scale = nn.Parameter(torch.Tensor([0]))
 
         width = int(out_channels * (base_width / 64.)) * groups
 
@@ -417,7 +420,10 @@ class SABottleneck(nn.Module):
 
         out = self.conv3(out)
 
-        out += self.shortcut(x)
+        if self.rezero:
+            out = out * self.scale + self.shortcut(x)
+        else:
+            out += self.shortcut(x)
         out = F.relu(out)
 
         return out
@@ -431,6 +437,9 @@ class PoolBottleneck(nn.Module):
         self.kernel_size = kernel_size
         self.with_conv = cfg.model.with_conv
         self.expansion = expansion
+        self.rezero = cfg.model.rezero
+        if self.rezero:
+            self.scale = nn.Parameter(torch.Tensor([0]))
 
         width = int(out_channels * (base_width / 64.)) * groups
 
@@ -456,6 +465,12 @@ class PoolBottleneck(nn.Module):
 
     def forward(self, x, r=None):
         out = self.conv1(x)
-        out = self.conv2(out) + self.shortcut(x)
+        out = self.conv2(out)
+
+        if self.rezero:
+            out = out * self.scale + self.shortcut(x)
+        else:
+            out += self.shortcut(x)
+
         out = F.relu(out)
         return out

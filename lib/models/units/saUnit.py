@@ -7,6 +7,7 @@ from .utils import get_same_padding
 from .postionalEncoding import PositionalEncoding, SinePositionalEncoding
 from .shake_shake import get_alpha_beta, shake_function
 from .mixUnit import MixedConv2d
+from .shuffleUnit import ChannelShuffle
 from lib.config import cfg
 
 
@@ -455,6 +456,10 @@ class PoolBottleneck(nn.Module):
             # nn.AvgPool2d(kernel_size, padding=padding, stride=stride),
             nn.BatchNorm2d(width),
             nn.ReLU(),
+            ChannelShuffle(4),
+        )
+
+        self.conv3 = nn.Sequential(
             nn.Conv2d(width, self.expansion * out_channels, kernel_size=1, bias=False),
             nn.BatchNorm2d(self.expansion * out_channels),
         )
@@ -470,6 +475,7 @@ class PoolBottleneck(nn.Module):
     def forward(self, x, r=None):
         out = self.conv1(x)
         out = self.conv2(out)
+        out = self.conv3(out)
 
         if self.rezero:
             out = out * self.scale + self.shortcut(x)

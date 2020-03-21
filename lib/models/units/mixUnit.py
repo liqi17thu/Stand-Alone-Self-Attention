@@ -10,6 +10,18 @@ def _split_channels(num_chan, num_groups):
     return split
 
 
+class AdaptiveAvgMaxPool2d(nn.Module):
+    def __init__(self, kernel, stride, padding):
+        super(AdaptiveAvgMaxPool2d, self).__init__()
+        self.scale = nn.Parameter(torch.Tensor([0]))
+
+        self.avg = nn.AvgPool2d(kernel, stride=stride, padding=padding)
+        self.max = nn.MaxPool2d(kernel, stride=stride, padding=padding)
+
+    def forward(self, x):
+        return self.avg(x) + self.max(x) * self.scale
+
+
 class MixedConv2d(nn.ModuleDict):
     """ Mixed Grouped Convolution
 
@@ -39,7 +51,7 @@ class MixedConv2d(nn.ModuleDict):
             else:
                 self.add_module(
                     str(idx),
-                    nn.AvgPool2d(k, stride=stride, padding=padding)
+                    nn.AdaptiveAvgMaxPool2d(k, stride=stride, padding=padding)
                 )
         self.splits = in_splits
 

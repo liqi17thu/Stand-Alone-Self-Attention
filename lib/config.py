@@ -14,7 +14,7 @@ cfg = CfgNode(dict(
     auto_resume=False,
     test=False,
     test_name='default',
-    disp_attention=False,
+    disp_attention=True,
 
     ddp=dict(
         distributed=True,

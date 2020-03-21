@@ -6,7 +6,7 @@ from lib.utils import AvgrageMeter, accuracy
 from lib.config import cfg
 
 
-def validate(model, test_loader, criterion, epoch, logger, attention_logger, writer):
+def validate(model, test_loader, criterion, epoch, logger, writer):
     if cfg.ddp.local_rank == 0:
         print('evaluation ...')
     model.eval()
@@ -15,10 +15,7 @@ def validate(model, test_loader, criterion, epoch, logger, attention_logger, wri
     top5 = AvgrageMeter()
     losses = AvgrageMeter()
 
-
     step = 0
-    if epoch > cfg.train.attention_epoch and cfg.ddp.local_rank == 0:
-        attention_logger.info("Epoch {}".format(epoch))
     with torch.no_grad():
         sta_time = time.time()
         for i, (data, target) in enumerate(test_loader):
@@ -43,9 +40,8 @@ def validate(model, test_loader, criterion, epoch, logger, attention_logger, wri
 
                 writer.add_scalar('Loss/vaild', losses.avg, epoch * len(test_loader) + i)
                 writer.add_scalar('Accuracy/vaild', top1.avg, epoch * len(test_loader) + i)
-            if step % cfg.train.disp == 0 and epoch > cfg.train.attention_epoch:
-                cfg.disp_attention = True
-            else:
-                cfg.disp_attention = False
+
+            if i == len(test_loader) - 1:
+                cfg.attention_disp = True
 
     return prec1.item()

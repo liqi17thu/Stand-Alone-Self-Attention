@@ -49,7 +49,7 @@ class MixedConv2d(nn.ModuleDict):
             else:
                 self.add_module(
                     str(idx),
-                    nn.AdaptiveAvgMaxPool2d(k, stride=stride, padding=padding)
+                    AdaptiveAvgMaxPool2d(k, stride=stride, padding=padding)
                 )
         self.splits = in_splits
 

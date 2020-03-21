@@ -64,7 +64,7 @@ def main():
     if cfg.ddp.local_rank == 0:
         print('Model Name: {0}'.format(cfg.model.name))
     if cfg.model.name == "MobileNetV3":
-        model = MobileNetV3(n_class=num_classes)
+        model = MobileNetV3(num_classes=num_classes)
     else:
         model = eval(cfg.model.name)(num_classes=num_classes,
                                      heads=cfg.model.heads,

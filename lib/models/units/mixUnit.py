@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+from .utils import get_same_padding
 
 def _split_channels(num_chan, num_groups):
     split = [num_chan // num_groups for _ in range(num_groups)]
@@ -15,7 +16,7 @@ class MixedConv2d(nn.ModuleDict):
       https://github.com/tensorflow/tpu/blob/master/models/official/mnasnet/mixnet/custom_layers.py
     """
     def __init__(self, in_channels, out_channels, kernel_size=3,
-                 stride=1, padding=1, dilation=1, depthwise=False, **kwargs):
+                 stride=1, dilation=1, depthwise=False, **kwargs):
         super(MixedConv2d, self).__init__()
 
         kernel_size = kernel_size if isinstance(kernel_size, list) else [kernel_size]
@@ -27,16 +28,21 @@ class MixedConv2d(nn.ModuleDict):
         for idx, (k, in_ch, out_ch) in enumerate(zip(kernel_size, in_splits, out_splits)):
             conv_groups = out_ch if depthwise else 1
             # use add_module to keep key space clean
-            if k <= 5:
-                self.add_module(
-                    str(idx),
-                    nn.Conv2d(in_ch, out_ch, k, stride=stride, padding=padding, groups=conv_groups)
-                )
-            else:
-                self.add_module(
-                    str(idx),
-                    nn.AvgPool2d(k, stride=stride, padding=padding)
-                )
+            padding = get_same_padding(k)
+            self.add_module(
+                str(idx),
+                nn.Conv2d(in_ch, out_ch, k, stride=stride, padding=padding, groups=conv_groups)
+            )
+            # if k <= 5:
+            #     self.add_module(
+            #         str(idx),
+            #         nn.Conv2d(in_ch, out_ch, k, stride=stride, padding=padding, groups=conv_groups)
+            #     )
+            # else:
+            #     self.add_module(
+            #         str(idx),
+            #         nn.AvgPool2d(k, stride=stride, padding=padding)
+            #     )
         self.splits = in_splits
 
     def forward(self, x):

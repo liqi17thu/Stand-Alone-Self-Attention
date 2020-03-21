@@ -450,9 +450,8 @@ class PoolBottleneck(nn.Module):
             nn.ReLU(),
         )
 
-        padding = get_same_padding(kernel_size)
         self.conv2 = nn.Sequential(
-            MixedConv2d(width, width, [3, 5, 7, 9], stride, padding, depthwise=True),
+            MixedConv2d(width, width, [3, 5, 7, 9], stride, depthwise=True),
             # nn.AvgPool2d(kernel_size, padding=padding, stride=stride),
             nn.BatchNorm2d(width),
             nn.ReLU(),

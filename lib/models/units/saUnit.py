@@ -6,6 +6,7 @@ import torch.nn.init as init
 from .utils import get_same_padding
 from .postionalEncoding import PositionalEncoding, SinePositionalEncoding
 from .shake_shake import get_alpha_beta, shake_function
+from .mixUnit import MixedConv2d
 from lib.config import cfg
 
 
@@ -451,10 +452,14 @@ class PoolBottleneck(nn.Module):
 
         padding = get_same_padding(kernel_size)
         self.conv2 = nn.Sequential(
-            nn.AvgPool2d(kernel_size, padding=padding, stride=stride),
+            MixedConv2d(width, width, [3, 5, 7, 9], stride, padding, depthwise=True),
+            # nn.AvgPool2d(kernel_size, padding=padding, stride=stride),
+            nn.BatchNorm2d(width),
+            nn.ReLU(),
             nn.Conv2d(width, self.expansion * out_channels, kernel_size=1, bias=False),
             nn.BatchNorm2d(self.expansion * out_channels),
         )
+
 
         self.shortcut = nn.Sequential()
         if stride != 1 or in_channels != self.expansion * out_channels:

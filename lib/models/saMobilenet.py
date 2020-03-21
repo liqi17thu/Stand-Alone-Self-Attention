@@ -17,23 +17,32 @@ class MobileNetV3(nn.Module):
         self.bn1 = nn.BatchNorm2d(16)
         self.hs1 = Hswish()
 
-        self.bneck = nn.Sequential(
-            MBInvertedConvLayer(3,  16,  16,  16,  nn.ReLU(inplace=True),   None, 1),
-            MBInvertedConvLayer(3,  16,  64,  24,  nn.ReLU(inplace=True),   None, 2),
-            MBInvertedConvLayer(3,  24,  72,  24,  nn.ReLU(inplace=True),   None, 1),
-            MBInvertedConvLayer(5,  24,  72,  40,  nn.ReLU(inplace=True),   SEModule(40), 2),
-            MBInvertedConvLayer(5,  40,  120, 40,  nn.ReLU(inplace=True),  SEModule(40), 1),
-            MBInvertedConvLayer(5,  40,  120, 40,  nn.ReLU(inplace=True),  SEModule(40), 1),
-            MBInvertedConvLayer(3,  40,  240, 80,  Hswish(), None, 2),
-            MBInvertedConvLayer(3,  80,  200, 80,  Hswish(), None, 1),
-            MBInvertedConvLayer(3,  80,  184, 80,  Hswish(), None, 1),
-            MBInvertedConvLayer(3,  80,  184, 80,  Hswish(), None, 1),
-            MBInvertedConvLayer(3,  80,  480, 112, Hswish(), SEModule(112), 1),
-            MBInvertedConvLayer(3,  112, 672, 112, Hswish(), SEModule(112), 1),
-            MBInvertedConvLayer(5,  112, 672, 160, Hswish(), SEModule(160), 1),
-            MBInvertedConvLayer(5,  160, 672, 160, Hswish(), SEModule(160), 2),
-            MBInvertedConvLayer(5,  160, 960, 160, Hswish(), SEModule(160), 1),
-        )
+        setting = [
+           # k,  in,  mid, out,  nl,       se,    s, pool
+            [3,  16,  16,  16,  'relu',    False, 1, True],
+            [3,  16,  64,  24,  'relu',    False, 2, True],
+            [3,  24,  72,  24,  'relu',    False, 1, True],
+            [5,  24,  72,  40,  'relu',    True,  2, True],
+            [5,  40,  120, 40,  'relu',    True,  1, True],
+            [5,  40,  120, 40,  'relu',    True,  1, True],
+            [3,  40,  240, 80,  'h_swish', False, 2, True],
+            [3,  80,  200, 80,  'h_swish', False, 1, True],
+            [3,  80,  184, 80,  'h_swish', False, 1, True],
+            [3,  80,  184, 80,  'h_swish', False, 1, True],
+            [3,  80,  480, 112, 'h_swish', True,  1, True],
+            [3,  112, 672, 112, 'h_swish', True,  1, True],
+            [5,  112, 672, 160, 'h_swish', True,  2, True],
+            [5,  160, 960, 160, 'h_swish', True,  1, True],
+            [5,  160, 960, 160, 'h_swish', True,  1, True],
+            ]
+
+        for i in range(cfg.model.num_resblock):
+            setting[i][7] = False
+
+        self.bneck = []
+        for k, inplane, mid, plane, nl, se, s, pool in setting:
+            self.bneck.append(MBInvertedConvLayer(k, inplane, mid, plane, nl, se, s, pool))
+        self.bneck = nn.Sequential(*self.bneck)
 
         self.conv2 = nn.Conv2d(160, 960, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn2 = nn.BatchNorm2d(960)

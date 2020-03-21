@@ -1,19 +1,28 @@
 import torch.nn as nn
+from .utils import get_same_padding
+from .activation import build_activation
+from .seUnit import SEModule
 
 
 class MBInvertedConvLayer(nn.Module):
     '''expand + depthwise + pointwise'''
-    def __init__(self, kernel_size, in_size, expand_size, out_size, nolinear, semodule, stride):
+
+    def __init__(self, kernel_size, in_size, expand_size, out_size, nolinear, se, stride, pooling):
         super(MBInvertedConvLayer, self).__init__()
         self.stride = stride
-        self.se = semodule
+        self.se = SEModule(out_size) if se else None
+        self.nolinear = build_activation(nolinear)
 
         self.conv1 = nn.Conv2d(in_size, expand_size, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn1 = nn.BatchNorm2d(expand_size)
-        self.nolinear1 = nolinear
-        self.conv2 = nn.Conv2d(expand_size, expand_size, kernel_size=kernel_size, stride=stride, padding=kernel_size//2, groups=expand_size, bias=False)
+
+        pad = get_same_padding(kernel_size)
+        if pooling:
+            self.conv2 = nn.AvgPool2d(kernel_size, stride, pad)
+        else:
+            self.conv2 = nn.Conv2d(expand_size, expand_size, kernel_size=kernel_size, stride=stride,
+                                   padding=pad, groups=expand_size, bias=False)
         self.bn2 = nn.BatchNorm2d(expand_size)
-        self.nolinear2 = nolinear
         self.conv3 = nn.Conv2d(expand_size, out_size, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn3 = nn.BatchNorm2d(out_size)
 
@@ -25,10 +34,10 @@ class MBInvertedConvLayer(nn.Module):
             )
 
     def forward(self, x):
-        out = self.nolinear1(self.bn1(self.conv1(x)))
-        out = self.nolinear2(self.bn2(self.conv2(out)))
+        out = self.nolinear(self.bn1(self.conv1(x)))
+        out = self.nolinear(self.bn2(self.conv2(out)))
         out = self.bn3(self.conv3(out))
         if self.se != None:
             out = self.se(out)
-        out = out + self.shortcut(x) if self.stride==1 else out
+        out = out + self.shortcut(x) if self.stride == 1 else out
         return out

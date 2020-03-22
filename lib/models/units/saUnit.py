@@ -8,6 +8,7 @@ from .postionalEncoding import PositionalEncoding, SinePositionalEncoding
 from .shake_shake import get_alpha_beta, shake_function
 from .mixUnit import MixedConv2d
 from .shuffleUnit import ChannelShuffle
+from .pooling import build_pooling_op
 from lib.config import cfg
 
 
@@ -451,19 +452,25 @@ class PoolBottleneck(nn.Module):
             nn.ReLU(),
         )
 
-        self.conv2 = nn.Sequential(
-            MixedConv2d(width, width, [3, 5, 7, 9], stride, depthwise=True),
-            # nn.AvgPool2d(kernel_size, padding=padding, stride=stride),
-            nn.BatchNorm2d(width),
-            nn.ReLU(),
-            ChannelShuffle(4),
-        )
+        if cfg.model.mixconv:
+            self.conv2 = nn.Sequential(
+                MixedConv2d(width, width, [3, 5, 7, 9], stride, depthwise=True),
+                nn.BatchNorm2d(width),
+                nn.ReLU(),
+                ChannelShuffle(4),
+            )
+        else:
+            padding = get_same_padding(kernel_size)
+            self.conv2 = nn.Sequential(
+                build_pooling_op(cfg.model.pool, width, kernel_size, padding, stride),
+                nn.BatchNorm2d(width),
+                nn.ReLU(),
+            )
 
         self.conv3 = nn.Sequential(
             nn.Conv2d(width, self.expansion * out_channels, kernel_size=1, bias=False),
             nn.BatchNorm2d(self.expansion * out_channels),
         )
-
 
         self.shortcut = nn.Sequential()
         if stride != 1 or in_channels != self.expansion * out_channels:

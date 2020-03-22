@@ -2,23 +2,14 @@ import torch
 import torch.nn as nn
 
 from .utils import get_same_padding
+from .pooling import build_pooling_op
+from lib.config import cfg
+
 
 def _split_channels(num_chan, num_groups):
     split = [num_chan // num_groups for _ in range(num_groups)]
     split[0] += num_chan - sum(split)
     return split
-
-
-class AdaptiveAvgMaxPool2d(nn.Module):
-    def __init__(self, kernel, stride, padding):
-        super(AdaptiveAvgMaxPool2d, self).__init__()
-        self.scale = nn.Parameter(torch.Tensor([0]))
-
-        self.avg = nn.AvgPool2d(kernel, stride=stride, padding=padding)
-        self.max = nn.MaxPool2d(kernel, stride=stride, padding=padding)
-
-    def forward(self, x):
-        return self.avg(x) + self.max(x) * self.scale
 
 
 class MixedConv2d(nn.ModuleDict):
@@ -49,7 +40,7 @@ class MixedConv2d(nn.ModuleDict):
             else:
                 self.add_module(
                     str(idx),
-                    AdaptiveAvgMaxPool2d(k, stride=stride, padding=padding)
+                    build_pooling_op(cfg.model.pool, in_ch, kernel_size, padding, stride),
                 )
         self.splits = in_splits
 

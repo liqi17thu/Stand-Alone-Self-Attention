@@ -1,6 +1,8 @@
 import numpy as np
 import argparse
 
+from .lib import get_attention
+
 parser = argparse.ArgumentParser('parameters')
 parser.add_argument('path', type=str)
 parser.add_argument('--test-iter', type=int, default=0)
@@ -13,6 +15,7 @@ parser.add_argument('--kernel', type=int, default=7)
 
 args = parser.parse_args()
 
+path = args.path
 test_iter = args.test_iter
 layer = args.layer
 block = args.block

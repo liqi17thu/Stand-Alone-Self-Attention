@@ -62,10 +62,10 @@ def get_mean_attention(path, layer, block, head, height, width, kernel):
                 break
             i += 1
         i += 1
-        
+
         if i >= length:
             break
-        
+
         att = []
         for k in range(kernel):
             att.append([float(v) for v in text[i+k][:-2].split(' ')])

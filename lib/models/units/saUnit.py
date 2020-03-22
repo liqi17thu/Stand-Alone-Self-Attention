@@ -91,6 +91,60 @@ class SAConv(nn.Module):
         init.kaiming_normal_(self.query_conv.weight, mode='fan_out', nonlinearity='relu')
 
 
+class SASimple(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, r_dim=256,
+                 logger=None):
+        super(SASimple, self).__init__()
+        self.out_channels = out_channels
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
+        self.heads = heads
+        self.encoding = cfg.model.encoding
+        self.temperature = cfg.model.temperature
+        self.logger = logger
+
+        self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
+
+        self.reset_parameters()
+
+    def forward(self, x, r=None):
+        batch, channels, height, width = x.size()
+
+        padded_x = F.pad(x, [self.padding, self.padding, self.padding, self.padding])
+        v_out = self.value_conv(padded_x)
+
+        v_out = v_out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
+        v_out = v_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride,
+                                        width // self.stride, -1)
+
+        out = x.view(batch, self.heads, channels // self.heads, height, width)
+        out = out.mean(dim=2)
+        out = out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
+        out = out.view(batch, self.heads, height // self.stride, width // self.stride, -1)
+        out = F.softmax(out, dim=-1)
+
+        # print attention info
+        if cfg.test and cfg.disp_attention and cfg.ddp.local_rank == 0:
+            for head in range(self.heads):
+                self.logger.info("head {}".format(head))
+                for h in range(height // self.stride):
+                    for w in range(width // self.stride):
+                        self.logger.info("height {} width {}".format(h, w))
+                        for k in range(self.kernel_size):
+                            loggerInfo = "{:.3f} " * self.kernel_size
+                            self.logger.info(loggerInfo.format(
+                                *out[0][head][0][h][w][k * self.kernel_size:(k + 1) * self.kernel_size].tolist()))
+
+        out = (out * v_out).sum(dim=-1)
+        out = out.view(batch, -1, height // self.stride, width // self.stride)
+
+        return out
+
+    def reset_parameters(self):
+        init.kaiming_normal_(self.value_conv.weight, mode='fan_out', nonlinearity='relu')
+
+
 class SAFull(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, heads=1, bias=False, logger=None):
         super(SAFull, self).__init__()
@@ -376,7 +430,8 @@ class SABottleneck(nn.Module):
         )
 
         padding = get_same_padding(kernel_size)
-        self.sa_conv = SAConv(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, logger=logger)
+        # self.sa_conv = SAConv(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, logger=logger)
+        self.sa_conv = SASimple(width, width, kernel_size, stride, padding, heads, r_dim=r_dim, logger=logger)
         self.non_linear = nn.Sequential(
             nn.BatchNorm2d(width),
             nn.ReLU(),

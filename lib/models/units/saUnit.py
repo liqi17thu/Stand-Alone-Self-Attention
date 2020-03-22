@@ -105,6 +105,7 @@ class SASimple(nn.Module):
         self.logger = logger
 
         self.value_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias, groups=heads)
+        self.linear = nn.Linear(kernel_size*kernel_size, kernel_size*kernel_size)
 
         self.reset_parameters()
 
@@ -122,6 +123,7 @@ class SASimple(nn.Module):
         out = torch.abs(out).mean(dim=2, keepdim=True)
         out = out.unfold(3, self.kernel_size, self.stride).unfold(4, self.kernel_size, self.stride)
         out = out.contiguous().view(batch, self.heads, 1, height // self.stride, width // self.stride, -1)
+        out = self.linear(out)
         out = F.softmax(out, dim=-1)
 
         # print attention info

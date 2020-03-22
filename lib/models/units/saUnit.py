@@ -118,10 +118,10 @@ class SASimple(nn.Module):
         v_out = v_out.contiguous().view(batch, self.heads, self.out_channels // self.heads, height // self.stride,
                                         width // self.stride, -1)
 
-        out = x.view(batch, self.heads, channels // self.heads, height, width)
-        out = out.mean(dim=2)
-        out = out.unfold(2, self.kernel_size, self.stride).unfold(3, self.kernel_size, self.stride)
-        out = out.view(batch, self.heads, height // self.stride, width // self.stride, -1)
+        out = padded_x.view(batch, self.heads, channels // self.heads, height+2*self.padding, width+2*self.padding)
+        out = torch.abs(out).mean(dim=2, keepdim=True)
+        out = out.unfold(3, self.kernel_size, self.stride).unfold(4, self.kernel_size, self.stride)
+        out = out.contiguous().view(batch, self.heads, 1, height // self.stride, width // self.stride, -1)
         out = F.softmax(out, dim=-1)
 
         # print attention info

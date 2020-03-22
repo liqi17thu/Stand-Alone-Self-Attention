@@ -73,8 +73,16 @@ def main():
                                      num_resblock=cfg.model.num_resblock,
                                      attention_logger=attention_logger)
 
+    if cfg.optim.method == 'SGD':
+        optimizer = optim.SGD(model.parameters(), **cfg.optim.sgd_params)
+    elif cfg.optim.method == 'Adam':
+        optimizer = optim.Adam(model.parameters(), **cfg.optim.adam_params)
+    else:
+        raise ValueError(f'Unsupported optimization: {cfg.optim.method}')
 
-    if cfg.model.pre_trained:
+    scheduler = get_scheduler(optimizer, len(train_loader), cfg)
+
+    if cfg.auto_resume or cfg.test:
         filename = 'best_model_' + str(cfg.dataset.name) + '_' + \
                    str(cfg.model.name) + '_' + str(cfg.model.stem) + '_ckpt.tar'
         if cfg.ddp.local_rank == 0:
@@ -92,6 +100,10 @@ def main():
         model.load_state_dict(checkpoint['state_dict'])
         start_epoch = checkpoint['epoch']
         best_acc = checkpoint['best_acc']
+
+        if cfg.auto_resume:
+            optimizer.load_state_dict(checkpoint['optimizer'])
+            scheduler.load_state_dict(checkpoint['scheduler'])
         if cfg.ddp.local_rank == 0:
             logger.info('Best Epoch: {0}, Best Acc: {1:.1%}'.format(start_epoch, best_acc))
     else:
@@ -105,15 +117,6 @@ def main():
         criterion = CrossEntropyLabelSmooth(num_classes=num_classes, epsilon=cfg.crit.smooth)
     else:
         criterion = nn.CrossEntropyLoss()
-
-    if cfg.optim.method == 'SGD':
-        optimizer = optim.SGD(model.parameters(), **cfg.optim.sgd_params)
-    elif cfg.optim.method == 'Adam':
-        optimizer = optim.Adam(model.parameters(), **cfg.optim.adam_params)
-    else:
-        raise ValueError(f'Unsupported optimization: {cfg.optim.method}')
-
-    scheduler = get_scheduler(optimizer, len(train_loader), cfg)
 
     if cfg.cuda:
         if cfg.ddp.distributed:
@@ -155,6 +158,7 @@ def main():
                     'state_dict': model.module.state_dict(),
                     'best_acc': best_acc,
                     'optimizer': optimizer.state_dict(),
+                    'scheduler': scheduler.state_dict(),
                 }, is_best, cfg.ckp_dir, filename)
             else:
                 save_checkpoint({
@@ -163,6 +167,7 @@ def main():
                     'state_dict': model.state_dict(),
                     'best_acc': best_acc,
                     'optimizer': optimizer.state_dict(),
+                    'scheduler': scheduler.state_dict(),
                 }, is_best, cfg.ckp_dir, filename)
 
 

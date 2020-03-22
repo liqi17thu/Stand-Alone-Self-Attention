@@ -1,0 +1,3 @@
+auto_resume: True
+model:
+  pre_trained: True

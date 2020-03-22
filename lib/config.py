@@ -14,7 +14,7 @@ cfg = CfgNode(dict(
     auto_resume=False,
     test=False,
     test_name='default',
-    disp_attention=False,
+    disp_attention=True,
 
     ddp=dict(
         distributed=True,
@@ -29,16 +29,16 @@ cfg = CfgNode(dict(
         heads=8,
         kernel=7,
         expansion=4,
-        pre_trained=False,
         num_resblock=2,
         with_conv=False,
         encoding='learnable',
         temperature=1.0,
         r_dim=256,
+        rezero=True,
     ),
     train=dict(
-        epoch=100,
-        attention_epoch=80,
+        epoch=200,
+        attention_epoch=130,
         start_epoch=0,
         disp=1,
     ),
@@ -49,7 +49,7 @@ cfg = CfgNode(dict(
         test_dir="/data/home/v-had/data_local/imagenet/val",
         mean=[0.485, 0.456, 0.406],
         std=[0.229, 0.224, 0.225],
-        batch_size=512,
+        batch_size=400,
         image_size=32,
         test_resize=256,
         workers=8,
@@ -62,7 +62,7 @@ cfg = CfgNode(dict(
     optim=dict(
         method="SGD",
         sgd_params=dict(
-            lr=0.5,
+            lr=0.4,
             momentum=0.9,
             weight_decay=0.0007,
         ),

@@ -1,5 +1,7 @@
+import torch
 import torch.nn as nn
 
+from lib.config import cfg
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
     """3x3 convolution with padding"""
@@ -64,6 +66,9 @@ class Bottleneck(nn.Module):
         self.stride = stride
         self.expansion = expansion
         width = int(planes * (base_width / 64.)) * groups
+        self.rezero = cfg.model.rezero
+        if self.rezero:
+            self.scale = nn.Parameter(torch.Tensor([0]))
 
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
@@ -97,7 +102,10 @@ class Bottleneck(nn.Module):
         out = self.conv3(out)
         out = self.bn3(out)
 
-        out += self.shortcut(x)
-        out = self.relu(out)
+        if self.rezero:
+            out = out * self.scale + self.shortcut(x)
+        else:
+            out += self.shortcut(x)
 
+        out = self.relu(out)
         return out

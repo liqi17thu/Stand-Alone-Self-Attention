@@ -4,6 +4,9 @@ model:
 dataset:
   batch_size: 512 
 
+train:
+  epoch: 300
+
 optim:
   sgd_params:
     lr: 0.5

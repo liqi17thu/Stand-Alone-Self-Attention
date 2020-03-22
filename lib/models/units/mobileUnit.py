@@ -32,7 +32,7 @@ class MBInvertedConvLayer(nn.Module):
         self.bn3 = nn.BatchNorm2d(out_size)
 
         self.shortcut = nn.Sequential()
-        if stride != 1 and in_size != out_size:
+        if stride != 1 or in_size != out_size:
             self.shortcut = nn.Sequential(
                 nn.Conv2d(in_size, out_size, kernel_size=1, stride=stride, padding=0, bias=False),
                 nn.BatchNorm2d(out_size),

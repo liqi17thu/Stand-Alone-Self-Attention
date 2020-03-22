@@ -1,8 +1,10 @@
+import torch
 import torch.nn as nn
 from .utils import get_same_padding
 from .activation import build_activation
 from .seUnit import SEModule
 
+from lib.config import cfg
 
 class MBInvertedConvLayer(nn.Module):
     '''expand + depthwise + pointwise'''
@@ -12,6 +14,9 @@ class MBInvertedConvLayer(nn.Module):
         self.stride = stride
         self.se = SEModule(out_size) if se else None
         self.nolinear = build_activation(nolinear)
+        self.rezero = cfg.model.rezero
+        if self.rezero:
+            self.scale = nn.Parameter(torch.Tensor([0]))
 
         self.conv1 = nn.Conv2d(in_size, expand_size, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn1 = nn.BatchNorm2d(expand_size)
@@ -27,9 +32,9 @@ class MBInvertedConvLayer(nn.Module):
         self.bn3 = nn.BatchNorm2d(out_size)
 
         self.shortcut = nn.Sequential()
-        if stride == 1 and in_size != out_size:
+        if stride != 1 and in_size != out_size:
             self.shortcut = nn.Sequential(
-                nn.Conv2d(in_size, out_size, kernel_size=1, stride=1, padding=0, bias=False),
+                nn.Conv2d(in_size, out_size, kernel_size=1, stride=stride, padding=0, bias=False),
                 nn.BatchNorm2d(out_size),
             )
 
@@ -39,5 +44,8 @@ class MBInvertedConvLayer(nn.Module):
         out = self.bn3(self.conv3(out))
         if self.se != None:
             out = self.se(out)
-        out = out + self.shortcut(x) if self.stride == 1 else out
+        if self.rezero:
+            out = out * self.scale + self.shortcut(x)
+        else:
+            out += self.shortcut(x)
         return out

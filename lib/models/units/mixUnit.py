@@ -40,7 +40,7 @@ class MixedConv2d(nn.ModuleDict):
             else:
                 self.add_module(
                     str(idx),
-                    build_pooling_op(cfg.model.pool, in_ch, kernel_size, padding, stride),
+                    build_pooling_op(cfg.model.pool, in_ch, k, padding, stride),
                 )
         self.splits = in_splits
 

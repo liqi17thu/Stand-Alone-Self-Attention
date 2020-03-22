@@ -16,5 +16,5 @@ dataset:
   batch_size: 500
 
 optim:
-  sgd_params:
-    lr: 0.064
+  method:
+    "RMSprop"

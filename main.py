@@ -77,6 +77,8 @@ def main():
         optimizer = optim.SGD(model.parameters(), **cfg.optim.sgd_params)
     elif cfg.optim.method == 'Adam':
         optimizer = optim.Adam(model.parameters(), **cfg.optim.adam_params)
+    elif cfg.optim.method == 'RMSprop':
+        optimizer = optim.RMSprop(model.parameters(), **cfg.optim.rmsprop_params)
     else:
         raise ValueError(f'Unsupported optimization: {cfg.optim.method}')
 

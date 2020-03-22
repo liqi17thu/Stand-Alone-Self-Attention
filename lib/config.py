@@ -70,6 +70,13 @@ cfg = CfgNode(dict(
             lr=3e-3,
             weight_decay=0.0001,
         ),
+        rmsprop_params=dict(
+            lr=0.064,
+            alpha=0.9,
+            weight_decay=1e-5,
+            eps=0.001,
+            momentum=0.9,
+        ),
         warmup_epoch=20,
         warmup_multiplier=16,
     ),

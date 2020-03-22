@@ -49,7 +49,7 @@ cfg = CfgNode(dict(
         test_dir="/data/home/v-had/data_local/imagenet/val",
         mean=[0.485, 0.456, 0.406],
         std=[0.229, 0.224, 0.225],
-        batch_size=512,
+        batch_size=400,
         image_size=32,
         test_resize=256,
         workers=8,
@@ -62,7 +62,7 @@ cfg = CfgNode(dict(
     optim=dict(
         method="SGD",
         sgd_params=dict(
-            lr=0.5,
+            lr=0.4,
             momentum=0.9,
             weight_decay=0.0007,
         ),

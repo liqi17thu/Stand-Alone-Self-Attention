@@ -131,7 +131,7 @@ def main():
         criterion = criterion.cuda()
 
     if cfg.test:
-        _ = validate(model, test_loader, criterion, start_epoch, logger, writer)
+        _ = validate(model, test_loader, criterion, start_epoch, logger, attention_logger, writer)
         return
 
     for epoch in range(start_epoch, cfg.train.epoch + 1):
@@ -140,7 +140,7 @@ def main():
             test_sampler.set_epoch(epoch)
 
         train(model, train_loader, optimizer, criterion, scheduler, epoch, logger, writer)
-        eval_acc = validate(model, test_loader, criterion, epoch, logger, writer)
+        eval_acc = validate(model, test_loader, criterion, epoch, logger, attention_logger, writer)
 
         is_best = eval_acc > best_acc
         best_acc = max(eval_acc, best_acc)

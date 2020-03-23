@@ -36,7 +36,7 @@ cfg = CfgNode(dict(
         r_dim=256,
         rezero=True,
         mixconv=True,
-        pool='avg',
+        pool='avg', # avg, max, avgmax, spconv
     ),
     train=dict(
         epoch=200,

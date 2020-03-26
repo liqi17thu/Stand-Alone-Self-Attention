@@ -136,6 +136,53 @@ def main():
         _ = validate(model, test_loader, criterion, start_epoch, logger, attention_logger, writer)
         return
 
+    if cfg.finetune:
+        # freeze early layers
+
+        for name, child in model.named_children():
+            print(name)
+
+        import ipdb; ipdb.set_trace()
+
+
+        for epoch in range(cfg.finetune.start_epoch, cfg.finetune.epoch + 1):
+            if cfg.ddp.distributed:
+                train_sampler.set_epoch(epoch)
+                test_sampler.set_epoch(epoch)
+
+            train(model, train_loader, optimizer, criterion, scheduler, epoch, logger, writer)
+            eval_acc = validate(model, test_loader, criterion, epoch, logger, attention_logger, writer)
+
+            is_best = eval_acc > best_acc
+            best_acc = max(eval_acc, best_acc)
+
+            filename = 'model_' + str(cfg.dataset.name) + '_' + \
+                       str(cfg.model.name) + '_' + str(cfg.model.stem) + '_finetune_ckpt.tar'
+            if cfg.ddp.local_rank == 0:
+                print('filename :: ', filename)
+
+            if cfg.ddp.local_rank == 0:
+                if torch.cuda.device_count() > 1:
+                    save_checkpoint({
+                        'epoch': epoch,
+                        'arch': cfg.model.name,
+                        'state_dict': model.module.state_dict(),
+                        'best_acc': best_acc,
+                        'optimizer': optimizer.state_dict(),
+                        'scheduler': scheduler.state_dict(),
+                    }, is_best, cfg.ckp_dir, filename)
+                else:
+                    save_checkpoint({
+                        'epoch': epoch,
+                        'arch': cfg.model.name,
+                        'state_dict': model.state_dict(),
+                        'best_acc': best_acc,
+                        'optimizer': optimizer.state_dict(),
+                        'scheduler': scheduler.state_dict(),
+                    }, is_best, cfg.ckp_dir, filename)
+
+        return
+
     for epoch in range(start_epoch, cfg.train.epoch + 1):
         if cfg.ddp.distributed:
             train_sampler.set_epoch(epoch)

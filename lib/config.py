@@ -44,6 +44,11 @@ cfg = CfgNode(dict(
         start_epoch=0,
         disp=1,
     ),
+    finetune=dict(
+        epoch=20,
+        start_epoch=0,
+        disp=1,
+    ),
     dataset=dict(
         name="cifar10",
         split_ratio=0.5,

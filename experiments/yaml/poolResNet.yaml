@@ -1,5 +1,7 @@
 model:
   name: 'PoolResNet26'
+  mixconv: False
+
 
 dataset:
   batch_size: 512 

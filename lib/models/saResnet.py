@@ -49,11 +49,12 @@ class SAResNet(nn.Module):
                     nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
                 )
 
-        self.layer1 = self._make_layer(block[0], 64, num_blocks[0], stride=1)
-        self.layer2 = self._make_layer(block[1], 128, num_blocks[1], stride=2)
-        self.layer3 = self._make_layer(block[2], 256, num_blocks[2], stride=2)
-        self.layer4 = self._make_layer(block[3], 512, num_blocks[3], stride=2)
-        self.layers = nn.Sequential(self.layer1, self.layer2, self.layer3, self.layer4)
+        self.layers = []
+        self.layers.append(self._make_layer(block[0], 64, num_blocks[0], stride=1))
+        self.layers.append(self._make_layer(block[1], 128, num_blocks[1], stride=2))
+        self.layers.append(self._make_layer(block[2], 256, num_blocks[2], stride=2))
+        self.layers.append(self._make_layer(block[3], 512, num_blocks[3], stride=2))
+        self.layers = nn.Sequential(*self.layers)
         self.dense = nn.Linear(512 * self.expansion, num_classes)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 

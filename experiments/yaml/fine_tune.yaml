@@ -1,5 +1,5 @@
 train:
-    disp: 1
+    disp: 5
 
 finetune:
   is_finetune: True
@@ -13,7 +13,9 @@ dataset:
   name: 'finetune_imagenet'
   train_dir: './data/imagenet/train'
   test_dir: './data/imagenet/val'
-  batch_size: 25
+  batch_size: 40
+  image_size: 320
+  finetune_size: 320
 
 optim:
     warmup_epoch: 1

@@ -35,7 +35,7 @@ cfg = CfgNode(dict(
         temperature=1.0,
         r_dim=256,
         rezero=True,
-        mixconv=True,
+        mixconv=False,
         pool='avg',
     ),
     train=dict(

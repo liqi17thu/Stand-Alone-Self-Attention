@@ -87,11 +87,9 @@ def main():
     scheduler = get_scheduler(optimizer, len(train_loader), cfg)
 
     if cfg.auto_resume or cfg.test or cfg.finetune.is_finetune:
-        if cfg.finetune.is_finetune:
-            dataset = cfg.dataset.name.split('_')[1]
-        else:
-            dataset = cfg.dataset.name
-        filename = 'best_model_' + dataset + '_' + \
+        if 'finetune' in cfg.dataset.name:
+            cfg.dataset.name = cfg.dataset.name.split('_')[1]
+        filename = 'best_model_' + cfg.dataset.name + '_' + \
                 str(cfg.model.name) + '_' + str(cfg.model.stem) + '_ckpt.tar'
         if cfg.ddp.local_rank == 0:
             print('filename :: ', filename)

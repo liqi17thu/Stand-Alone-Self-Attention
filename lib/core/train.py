@@ -38,11 +38,18 @@ def train(model, train_loader, optimizer, criterion, scheduler, epoch, logger, w
 
         step += 1
         if step % cfg.train.disp == 0 and cfg.ddp.local_rank == 0:
-            logger.info("Train: Epoch {}/{}  Time: {:.3f} Loss {losses.avg:.3f} LR {:.3f} "
-                        "Prec@(1,5) ({top1.avg:.1%}, {top5.avg:.1%})".format(
-                        epoch, cfg.train.epoch, (time.time()-sta_time)/cfg.train.disp,
-                        optimizer.param_groups[0]['lr'],
-                        losses=losses, top1=top1, top5=top5))
+            if cfg.finetune.is_finetune:
+                logger.info("Finetune: Epoch {}/{}  Time: {:.3f} Loss {losses.avg:.3f} LR {:.3f} "
+                            "Prec@(1,5) ({top1.avg:.1%}, {top5.avg:.1%})".format(
+                            epoch, cfg.finetune.epoch, (time.time()-sta_time)/cfg.train.disp,
+                            optimizer.param_groups[0]['lr'],
+                            losses=losses, top1=top1, top5=top5))
+            else:
+                logger.info("Train: Epoch {}/{}  Time: {:.3f} Loss {losses.avg:.3f} LR {:.3f} "
+                            "Prec@(1,5) ({top1.avg:.1%}, {top5.avg:.1%})".format(
+                            epoch, cfg.train.epoch, (time.time()-sta_time)/cfg.train.disp,
+                            optimizer.param_groups[0]['lr'],
+                            losses=losses, top1=top1, top5=top5))
 
             writer.add_scalar('Loss/train', losses.avg, epoch * len(train_loader) + i)
             writer.add_scalar('Accuracy/train', top1.avg, epoch * len(train_loader) + i)

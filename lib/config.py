@@ -15,7 +15,6 @@ cfg = CfgNode(dict(
     test=False,
     test_name='default',
     disp_attention=True,
-    finetune=False,
 
     ddp=dict(
         distributed=True,
@@ -46,6 +45,7 @@ cfg = CfgNode(dict(
         disp=1,
     ),
     finetune=dict(
+        is_finetune=False,
         epoch=20,
         start_epoch=0,
         disp=1,

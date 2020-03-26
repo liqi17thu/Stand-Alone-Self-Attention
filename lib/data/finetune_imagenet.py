@@ -8,7 +8,7 @@ from .transformer_v2 import get_transforms
 
 
 def finetune_imagenet():
-    transformation = get_transforms(input_size=cfg.dataset.funetune_size, test_size=cfg.dataset.finetune_size,
+    transformation = get_transforms(input_size=cfg.dataset.finetune_size, test_size=cfg.dataset.finetune_size,
                                     kind='full', crop=True, need=('train', 'val'), backbone=None)
     transform_test = transformation['val']
 

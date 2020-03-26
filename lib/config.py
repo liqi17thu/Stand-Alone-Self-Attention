@@ -60,6 +60,7 @@ cfg = CfgNode(dict(
         batch_size=400,
         image_size=32,
         test_resize=256,
+        finetune_size=320,
         workers=8,
         use_aa=True,
         bgr=False,

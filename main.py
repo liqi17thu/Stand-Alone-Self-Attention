@@ -44,6 +44,8 @@ def main():
     if cfg.ddp.local_rank == 0:
         if cfg.test:
             logger = get_logger(os.path.join(cfg.save_path, 'test.log'))
+        elif cfg.finetune.is_finetune:
+            logger = get_logger(os.path.join(cfg.save_path, 'finetune.log'))
         else:
             logger = get_logger(os.path.join(cfg.save_path, 'train.log'))
         attention_logger = get_attention_logger(os.path.join(cfg.save_path, 'attention.log'))
@@ -143,7 +145,6 @@ def main():
             print(name)
 
         import ipdb; ipdb.set_trace()
-
 
         for epoch in range(cfg.finetune.start_epoch, cfg.finetune.epoch + 1):
             if cfg.ddp.distributed:

@@ -86,9 +86,13 @@ def main():
 
     scheduler = get_scheduler(optimizer, len(train_loader), cfg)
 
-    if cfg.auto_resume or cfg.test or cfg.finetune:
-        filename = 'best_model_' + str(cfg.dataset.name) + '_' + \
-                   str(cfg.model.name) + '_' + str(cfg.model.stem) + '_ckpt.tar'
+    if cfg.auto_resume or cfg.test or cfg.finetune.is_finetune:
+        if cfg.finetune.is_finetune:
+            dataset = cfg.dataset.name.split('_')[1]
+        else:
+            dataset = cfg.dataset.name
+        filename = 'best_model_' + dataset + '_' + \
+                str(cfg.model.name) + '_' + str(cfg.model.stem) + '_ckpt.tar'
         if cfg.ddp.local_rank == 0:
             print('filename :: ', filename)
         file_path = os.path.join(cfg.test_path, 'checkpoints', filename)
@@ -107,7 +111,7 @@ def main():
 
         if cfg.auto_resume:
             optimizer.load_state_dict(checkpoint['optimizer'])
-            scheduler.load_state_dict(checkpoint['scheduler'])
+            # scheduler.load_state_dict(checkpoint['scheduler'])
         if cfg.ddp.local_rank == 0:
             logger.info('Best Epoch: {0}, Best Acc: {1:.1%}'.format(start_epoch, best_acc))
     else:
@@ -140,11 +144,10 @@ def main():
 
     if cfg.finetune:
         # freeze early layers
-
-        for name, child in model.named_children():
-            print(name)
-
-        import ipdb; ipdb.set_trace()
+        for i, layer in enumerate(model.module.layers):
+            if i < 3:
+                for param in layer.parameters():
+                    param.require_grad = False
 
         for epoch in range(cfg.finetune.start_epoch, cfg.finetune.epoch + 1):
             if cfg.ddp.distributed:

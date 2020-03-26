@@ -4,17 +4,18 @@ import torchvision.transforms as transforms
 from lib.data.data_util import ImageNetPolicy, ToBGRTensor
 from lib.config import cfg
 
-from .transformer_v2 import get_transforms
+from lib.data.transformer_v2 import get_transforms
 
 
 def finetune_imagenet():
     transformation = get_transforms(input_size=cfg.dataset.finetune_size, test_size=cfg.dataset.finetune_size,
                                     kind='full', crop=True, need=('train', 'val'), backbone=None)
-    transform_test = transformation['val']
+    transform_train = transformation['val_train']
+    transform_test = transformation['val_test']
 
     train_data = datasets.ImageFolder(
         cfg.dataset.train_dir,
-        transform_test
+        transform_train
     )
 
     test_data = datasets.ImageFolder(

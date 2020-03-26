@@ -1,0 +1,21 @@
+train:
+    disp: 1
+
+finetune:
+  is_finetune: True
+
+model:
+  name: 'SAResNet50'
+  stem: 'imagenet_conv'
+  rezero: False
+
+dataset:
+  name: 'finetune_imagenet'
+  train_dir: './data/imagenet/train'
+  test_dir: './data/imagenet/val'
+  batch_size: 25
+
+optim:
+    warmup_epoch: 1
+    sgd_params:
+        lr: 0.001

@@ -122,7 +122,7 @@ if cfg.ddp.local_rank == 0:
 
     if not os.path.exists(cfg.save_path):
         os.mkdir(cfg.save_path)
-    elif not cfg.test and not cfg.auto_resume:
+    elif not cfg.test and not cfg.auto_resume and not cfg.finetune.is_finetune:
         key = input('Delete Existing Directory [y/n]: ')
         if key == 'n':
             raise ValueError("Save directory already exists")

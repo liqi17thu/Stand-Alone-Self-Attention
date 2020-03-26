@@ -102,8 +102,10 @@ def main():
 
         keys = state_dict.copy().keys()
         for key in keys:
-            if 'total_ops' in key or 'total_params' in key:
+            if 'layer1' in key or 'layer2' in key or 'layer3' in key or 'layer4' in key or 'total_ops' in key or 'total_params' in key:
                 del state_dict[key]
+            # if 'total_ops' in key or 'total_params' in key:
+            #     del state_dict[key]
 
         model.load_state_dict(checkpoint['state_dict'])
         start_epoch = checkpoint['epoch']

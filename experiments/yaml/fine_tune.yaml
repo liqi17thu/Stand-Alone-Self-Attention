@@ -1,5 +1,5 @@
 train:
-    disp: 5
+    disp: 50
 
 finetune:
   is_finetune: True

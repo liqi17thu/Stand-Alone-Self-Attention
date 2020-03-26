@@ -15,8 +15,8 @@ dataset:
   train_dir: './data/imagenet/train'
   test_dir: './data/imagenet/val'
   image_size: 224
-  batch_size: 300
+  batch_size: 200
 
 optim:
   sgd_params:
-    lr: 0.15
+    lr: 0.1

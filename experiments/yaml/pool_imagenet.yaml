@@ -1,4 +1,4 @@
-auto_resume: True
+# auto_resume: True
 train:
   epoch: 180
   attention_epoch: 160
@@ -7,15 +7,14 @@ train:
 model:
     name: 'PoolResNet50'
     stem: 'imagenet_conv'
-    pre_trained: True
 
 dataset:
   name: 'imagenet'
   train_dir: './data/imagenet/train'
   test_dir: './data/imagenet/val'
   image_size: 224
-  batch_size: 300
+  batch_size: 256
 
 optim:
   sgd_params:
-    lr: 0.6
+    lr: 0.15

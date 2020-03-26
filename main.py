@@ -146,7 +146,6 @@ def main():
 
         import ipdb; ipdb.set_trace()
 
-
         for epoch in range(cfg.finetune.start_epoch, cfg.finetune.epoch + 1):
             if cfg.ddp.distributed:
                 train_sampler.set_epoch(epoch)

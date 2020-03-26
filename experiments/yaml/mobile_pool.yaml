@@ -7,6 +7,7 @@ train:
 model:
     name: 'MobileNetV3'
     num_resblock: 6
+    mixconv: False
 
 dataset:
   name: 'imagenet'

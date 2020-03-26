@@ -44,6 +44,8 @@ def main():
     if cfg.ddp.local_rank == 0:
         if cfg.test:
             logger = get_logger(os.path.join(cfg.save_path, 'test.log'))
+        elif cfg.finetune.is_finetune:
+            logger = get_logger(os.path.join(cfg.save_path, 'finetune.log'))
         else:
             logger = get_logger(os.path.join(cfg.save_path, 'train.log'))
         attention_logger = get_attention_logger(os.path.join(cfg.save_path, 'attention.log'))
